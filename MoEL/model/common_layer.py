@@ -835,7 +835,7 @@ def evaluate(model, data,  ty='valid', max_dec_step=30):
                             #hyp_t=topk_sent,
                             hyp_g=greedy_sent,
                             hyp_b=beam_sent)   
-        pbar.set_description("loss:{:.4f} ppl:{:.1f}".format(np.mean(l),math.exp(np.mean(l))))
+        pbar.set_description("loss:{:.4f} ppl:{:.1f}".format(np.mean(l),ppl))
 
     loss = np.mean(l)
     ppl = np.mean(p)
@@ -847,9 +847,9 @@ def evaluate(model, data,  ty='valid', max_dec_step=30):
     #bleu_score_t = moses_multi_bleu(np.array(hyp_t), np.array(ref), lowercase=True)
 
     print("EVAL\tLoss\tPPL\tAccuracy\tBleu_g\tBleu_b")
-    print("{}\t{:.4f}\t{:.4f}\t{:.2f}\t{:.2f}\t{:.2f}".format(ty,loss,math.exp(loss), acc, bleu_score_g,bleu_score_b))
+    print("{}\t{:.4f}\t{:.4f}\t{:.2f}\t{:.2f}\t{:.2f}".format(ty,loss,ppl, acc, bleu_score_g,bleu_score_b))
     
-    return loss, math.exp(loss), bce, acc, bleu_score_g, bleu_score_b
+    return loss, ppl, bce, acc, bleu_score_g, bleu_score_b
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)

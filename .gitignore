@@ -1,5 +1,8 @@
 /MoEL/vectors/
 /MoEL/save/
+/MoEL/wandb/
+
+/MoEL/empathetic-dialogue/*.p
 
 *.ipynb_checkpoints
 *.DS_Store

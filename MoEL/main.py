@@ -111,7 +111,8 @@ try:
                 weights_best = deepcopy(model.state_dict())
             else: 
                 patient += 1
-            if(patient > 3): break     # Add more patience to avoid local optimas.
+		print('Patience increased to', patient)
+            if(patient > 20): break     # Add more patience to avoid local optimas.
 
 
 except KeyboardInterrupt:

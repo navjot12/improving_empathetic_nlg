@@ -100,8 +100,6 @@ try:
             wandb_dict['bleu_valid_greedy'] = bleu_score_g
             wandb_dict['bleu_valid_beam'] = bleu_score_b
 
-            wandb.log(wandb_dict)
-
             if (config.model == "experts" and n_iter<13000):
                 continue
             if(ppl_val <= best_ppl):
@@ -111,10 +109,10 @@ try:
                 weights_best = deepcopy(model.state_dict())
             else: 
                 patient += 1
-                print('Patience increased to', patient)
-            if(patient > 20): break     # Add more patience to avoid local optimas.
 
-
+	     wandb_dict['patience'] = patient
+	     wandb.log(wandb_dict)
+            if(patient > 3): break
 except KeyboardInterrupt:
     print('-' * 89)
     print('Exiting from training early')

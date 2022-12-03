@@ -48,7 +48,7 @@ elif(config.model == "experts"):
 print("MODEL USED",config.model)
 print("TRAINABLE PARAMETERS",count_parameters(model))
 
-check_iter = 2000
+check_iter = 1500
 try:
     if (config.USE_CUDA):
         model.cuda()

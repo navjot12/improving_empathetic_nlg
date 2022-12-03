@@ -2,7 +2,7 @@
 /MoEL/save/
 /MoEL/wandb/
 
-/MoEL/empathetic_dialogue/*.p
+/MoEL/empathetic-dialogue/*.p
 
 *.ipynb_checkpoints
 *.DS_Store

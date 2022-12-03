@@ -64,6 +64,9 @@ parser.add_argument("--filter", type=int, default=50)
 ## wandb
 parser.add_argument("--wandb_project", type=str, default=None)
 
+## grouped emotions
+parser.add_argument("--grouped_emotions", action="store_true")
+
 def print_opts(opts):
     """Prints the values of all command-line arguments.
     """
@@ -142,4 +145,9 @@ collect_stats = False
 if arg.wandb_project:
     wandb.init(project=arg.wandb_project, entity="improving-empathetic-nlg")
     wandb.config = vars(arg)
+
+grouped_emotions = arg.grouped_emotions
+if grouped_emotions:
+    save_path += '/grouped_emotions/'
+    save_path_dataset += '/grouped_emotions/'
 

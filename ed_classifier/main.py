@@ -19,7 +19,7 @@ print("Loading data")
 
 context = np.load(
     "../MoEL/empathetic-dialogue/sys_dialog_texts.train.npy", allow_pickle=True)
-emotion = np.load("./MoEL/empathetic-dialogue/sys_emotion_texts.train.npy")
+emotion = np.load("../MoEL/empathetic-dialogue/sys_emotion_texts.train.npy")
 
 # Use tokenizer to generate tokens from empathetic context
 tokenized_context = []
@@ -44,8 +44,8 @@ train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=10)
 # Development data
 
 context = np.load(
-    "./MoEL/empathetic-dialogue/sys_dialog_texts.dev.npy", allow_pickle=True)
-emotion = np.load("./MoEL/empathetic-dialogue/sys_emotion_texts.dev.npy")
+    "../MoEL/empathetic-dialogue/sys_dialog_texts.dev.npy", allow_pickle=True)
+emotion = np.load("../MoEL/empathetic-dialogue/sys_emotion_texts.dev.npy")
 
 # Use tokenizer to generate tokens from empathetic context
 tokenized_context = []

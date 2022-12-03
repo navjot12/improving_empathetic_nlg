@@ -104,7 +104,7 @@ for epoch in range(0, 4):
         with torch.no_grad():
             outputs = model(batch[0].to(device), token_type_ids=None,
                             attention_mask=batch[1].to(device))
-        logits = outputs[1].detach().cpu().numpy()
+        logits = outputs[0].detach().cpu().numpy()
         labels = batch[2].to('cpu').numpy()
 
         eval_accuracy += np.sum(

@@ -48,7 +48,7 @@ elif(config.model == "experts"):
 print("MODEL USED",config.model)
 print("TRAINABLE PARAMETERS",count_parameters(model))
 
-check_iter = 2000
+check_iter = 1500
 try:
     if (config.USE_CUDA):
         model.cuda()
@@ -70,14 +70,19 @@ try:
         if(config.noam):
             writer.add_scalars('lr', {'learning_rata': model.optimizer._rate}, n_iter)
 
-        wandb_dict['loss_train'] = loss
-        wandb_dict['ppl_train'] = ppl
-        wandb_dict['bce_train'] = bce
-        wandb_dict['acc_train'] = acc
-        if (config.noam):
-            wandb_dict['learning_rate'] = model.optimizer._rate
+        if((n_iter+1)%check_iter==0):
 
-        if((n_iter+1)%check_iter==0):    
+            if (config.noam):
+                wandb_dict['learning_rate'] = model.optimizer._rate
+
+            loss_train, ppl_train, bce_train, acc_train, bleu_score_g, bleu_score_b= evaluate(model, data_loader_tra ,ty="valid", max_dec_step=50)
+            wandb_dict['loss_train'] = loss_train
+            wandb_dict['ppl_train'] = ppl_train
+            wandb_dict['bce_train'] = bce_train
+            wandb_dict['acc_train'] = acc_train
+            wandb_dict['bleu_train_greedy'] = bleu_score_g
+            wandb_dict['bleu_train_beam'] = bleu_score_b
+
             model = model.eval()
             model.epoch = n_iter
             model.__id__logger = 0 
@@ -95,6 +100,8 @@ try:
             wandb_dict['bleu_valid_greedy'] = bleu_score_g
             wandb_dict['bleu_valid_beam'] = bleu_score_b
 
+            wandb.log(wandb_dict)
+
             if (config.model == "experts" and n_iter<13000):
                 continue
             if(ppl_val <= best_ppl):
@@ -104,9 +111,8 @@ try:
                 weights_best = deepcopy(model.state_dict())
             else: 
                 patient += 1
-            if(patient > 10): break     # Add more patience to avoid local optimas.
+            if(patient > 3): break     # Add more patience to avoid local optimas.
 
-        wandb.log(wandb_dict)
 
 except KeyboardInterrupt:
     print('-' * 89)
@@ -122,4 +128,14 @@ file_summary = config.save_path+"summary.txt"
 with open(file_summary, 'w') as the_file:
     the_file.write("EVAL\tLoss\tPPL\tAccuracy\tBleu_g\tBleu_b\n")
     the_file.write("{}\t{:.4f}\t{:.4f}\t{:.4f}\t{:.2f}\t{:.2f}\n".format("test",loss_test,ppl_test, acc_test, bleu_score_g,bleu_score_b))
-    
+
+wandb_dict = {}
+
+wandb_dict['loss_test'] = loss_test
+wandb_dict['ppl_test'] = ppl_test
+wandb_dict['bce_test'] = bce_test
+wandb_dict['acc_test'] = acc_test
+wandb_dict['bleu_test_greedy'] = bleu_score_g
+wandb_dict['bleu_test_beam'] = bleu_score_b
+
+wandb.log(wandb_dict)

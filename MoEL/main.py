@@ -14,6 +14,7 @@ import time
 import numpy as np 
 import math
 from tensorboardX import SummaryWriter
+import wandb
 
 torch.manual_seed(0)
 torch.backends.cudnn.deterministic = True
@@ -57,6 +58,9 @@ try:
     writer = SummaryWriter(log_dir=config.save_path)
     weights_best = deepcopy(model.state_dict())
     data_iter = make_infinite(data_loader_tra)
+
+    wandb_dict = {}
+
     for n_iter in tqdm(range(1000000)):
         loss, ppl, bce, acc = model.train_one_batch(next(data_iter),n_iter)
         writer.add_scalars('loss', {'loss_train': loss}, n_iter)
@@ -66,6 +70,13 @@ try:
         if(config.noam):
             writer.add_scalars('lr', {'learning_rata': model.optimizer._rate}, n_iter)
 
+        wandb_dict['loss_train'] = loss
+        wandb_dict['ppl_train'] = ppl
+        wandb_dict['bce_train'] = bce
+        wandb_dict['acc_train'] = acc
+        if (config.noam):
+            wandb_dict['learning_rate'] = model.optimizer._rate
+
         if((n_iter+1)%check_iter==0):    
             model = model.eval()
             model.epoch = n_iter
@@ -74,8 +85,16 @@ try:
             writer.add_scalars('loss', {'loss_valid': loss_val}, n_iter)
             writer.add_scalars('ppl', {'ppl_valid': ppl_val}, n_iter)
             writer.add_scalars('bce', {'bce_valid': bce_val}, n_iter)
-            writer.add_scalars('accuracy', {'acc_train': acc_val}, n_iter)
+            writer.add_scalars('accuracy', {'acc_valid': acc_val}, n_iter)
             model = model.train()
+
+            wandb_dict['loss_valid'] = loss_val
+            wandb_dict['ppl_valid'] = ppl_val
+            wandb_dict['bce_valid'] = bce_val
+            wandb_dict['acc_valid'] = acc_val
+            wandb_dict['bleu_valid_greedy'] = bleu_score_g
+            wandb_dict['bleu_valid_beam'] = bleu_score_b
+
             if (config.model == "experts" and n_iter<13000):
                 continue
             if(ppl_val <= best_ppl):
@@ -85,7 +104,10 @@ try:
                 weights_best = deepcopy(model.state_dict())
             else: 
                 patient += 1
-            if(patient > 2): break
+            if(patient > 10): break     # Add more patience to avoid local optimas.
+
+        wandb.log(wandb_dict)
+
 except KeyboardInterrupt:
     print('-' * 89)
     print('Exiting from training early')

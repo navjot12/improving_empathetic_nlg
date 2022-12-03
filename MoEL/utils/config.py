@@ -1,6 +1,7 @@
 import os
 import logging 
 import argparse
+import wandb
 
 UNK_idx = 0
 PAD_idx = 1
@@ -59,6 +60,9 @@ parser.add_argument("--hop", type=int, default=6)
 parser.add_argument("--heads", type=int, default=1)
 parser.add_argument("--depth", type=int, default=40)
 parser.add_argument("--filter", type=int, default=50)
+
+## wandb
+parser.add_argument("--wandb_project", type=str, default=None)
 
 def print_opts(opts):
     """Prints the values of all command-line arguments.
@@ -134,4 +138,8 @@ act_loss_weight = arg.act_loss_weight
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%m-%d %H:%M')#,filename='save/logs/{}.log'.format(str(name)))
 collect_stats = False
 
+## wandb
+if arg.wandb_project:
+    wandb.init(project=arg.wandb_project, entity="improving-empathetic-nlg")
+    wandb.config = vars(arg)
 

@@ -100,6 +100,9 @@ try:
             wandb_dict['bleu_valid_greedy'] = bleu_score_g
             wandb_dict['bleu_valid_beam'] = bleu_score_b
 
+            wandb_dict['patience'] = patient
+            wandb.log(wandb_dict)
+
             if (config.model == "experts" and n_iter<13000):
                 continue
             if(ppl_val <= best_ppl):
@@ -110,9 +113,9 @@ try:
             else: 
                 patient += 1
             
-            wandb_dict['patience'] = patient
-            wandb.log(wandb_dict)
-            if(patient > 3): break
+            if(patient > 3):
+                print('Ran out of patience while training!')
+                break
 except KeyboardInterrupt:
     print('-' * 89)
     print('Exiting from training early')

@@ -109,9 +109,9 @@ try:
                 weights_best = deepcopy(model.state_dict())
             else: 
                 patient += 1
-
-	     wandb_dict['patience'] = patient
-	     wandb.log(wandb_dict)
+            
+            wandb_dict['patience'] = patient
+            wandb.log(wandb_dict)
             if(patient > 3): break
 except KeyboardInterrupt:
     print('-' * 89)
@@ -121,7 +121,7 @@ except KeyboardInterrupt:
 model.load_state_dict({ name: weights_best[name] for name in weights_best })
 model.eval()
 model.epoch = 100
-loss_test, ppl_test, bce_test, acc_test, bleu_score_g, bleu_score_b= evaluate(model, data_loader_tst ,ty="test", max_dec_step=50)
+loss_test, ppl_test, bce_test, acc_test, bleu_score_g, bleu_score_b= evaluate(model, data_loader_tst ,ty="valid", max_dec_step=50)
 
 file_summary = config.save_path+"summary.txt"
 with open(file_summary, 'w') as the_file:

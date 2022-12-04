@@ -110,8 +110,8 @@ try:
             else: 
                 patient += 1
 
-	     wandb_dict['patience'] = patient
-	     wandb.log(wandb_dict)
+	        wandb_dict['patience'] = patient
+	        wandb.log(wandb_dict)
             if(patient > 3): break
 except KeyboardInterrupt:
     print('-' * 89)

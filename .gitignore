@@ -4,5 +4,7 @@
 
 /MoEL/empathetic-dialogue/*.p
 
+/pec/pec*
+
 *.ipynb_checkpoints
 *.DS_Store

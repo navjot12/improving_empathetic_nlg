@@ -8,6 +8,7 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler, Sequentia
 from transformers import AdamW, BertForSequenceClassification, BertTokenizer
 
 arg = sys.argv[1]
+epochs = sys.argv[2] if sys.argv[2] else 4
 
 tokenizer = BertTokenizer.from_pretrained(
     'bert-base-cased', truncation_side='right')
@@ -73,7 +74,6 @@ dev_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=10)
 if arg:
     model = BertForSequenceClassification.from_pretrained(arg)
     print("loaded model {}".format(arg))
-    print(model)
 else:
     model = BertForSequenceClassification.from_pretrained(
         "bert-base-uncased",
@@ -90,7 +90,8 @@ else:
     device = torch.device("cpu")
 
 print("training")
-for epoch in range(0, 4):
+for epoch in range(0, epochs):
+    print("Epoch: {} of {}".format(epoch, epochs))
     loss = 0
     model.train()
 
@@ -105,6 +106,8 @@ for epoch in range(0, 4):
         output[0].backward()
         optimizer.step()
 
+    model.save_pretrained("./epoch_{}".format(epoch))
+
     model.eval()
 
     eval_loss, eval_accuracy = 0, 0
@@ -118,7 +121,5 @@ for epoch in range(0, 4):
         eval_accuracy += np.sum(
             np.argmax(logits, axis=1).flatten() == labels.flatten()) / len(labels.flatten())
 
-    print("Epoch: {} \tTraining loss: {} \tAccuracy: {}".format(
-        epoch, loss, eval_accuracy/len(dev_dataloader)))
-
-model.save_pretrained(".")
+    print("Training loss: {} \tAccuracy: {}".format(
+        loss, eval_accuracy/len(dev_dataloader)))

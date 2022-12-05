@@ -20,6 +20,14 @@ idx_to_emotion = {0: 'surprised', 1: 'excited', 2: 'annoyed', 3: 'proud', 4: 'an
                   24: 'content', 25: 'devastated', 26: 'sentimental', 27: 'caring', 28: 'trusting',
                   29: 'ashamed', 30: 'apprehensive', 31: 'faithful'}
 
+model = BertForSequenceClassification.from_pretrained("model")
+
+if torch.cuda.is_available():
+    model.cuda()
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+
 for dataset in ["dev", "test", "train"]:
     input_data = np.load("sys_dialog_texts.{}.npy".format(
         dataset), allow_pickle=True)
@@ -32,13 +40,21 @@ for dataset in ["dev", "test", "train"]:
         tokenized_context.append(tokens['input_ids'])
         tokenized_masks.append(tokens['attention_mask'])
 
+    tokens = torch.stack(tokenized_context).squeeze()
+    masks = torch.stack(tokenized_masks).squeeze()
+
+    data = TensorDataset(tokens, masks)
+    dataloader = DataLoader(data, batch_size=10)
+
     outputs = []
 
-    model = BertForSequenceClassification.from_pretrained("model")
-    for token, mask in tqdm(zip(tokenized_context, tokenized_masks)):
-        output = model(token, token_type_ids=None, attention_mask=mask)
+    for batch in tqdm(dataloader):
+        output = model(batch[0].to(device),
+                       token_type_ids=None, attention_mask=batch[1].to(device))
 
-        logits = output[0].detach().numpy()
-        outputs.append(idx_to_emotion[np.argmax(logits, axis=1).item()])
+        logits = output[0].detach().cpu().numpy()
+        outputs.append(np.vectorize(idx_to_emotion.get)
+                       (np.argmax(logits, axis=1)))
 
-    np.save("sys_emotioncls_texts.{}.npy".format(dataset), np.stack(outputs))
+    np.save("sys_emotioncls_texts.{}.npy".format(
+        dataset), np.concatenate(outputs))

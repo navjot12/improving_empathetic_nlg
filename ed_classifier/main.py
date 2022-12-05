@@ -7,6 +7,8 @@ from tqdm import tqdm
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from transformers import AdamW, BertForSequenceClassification, BertTokenizer
 
+# Run with python3 main.py [dir-of-model] [num-of-epochs]
+
 arg = sys.argv[1]
 epochs = int(sys.argv[2]) if sys.argv[2] else 4
 
@@ -67,9 +69,9 @@ dev_masks = torch.stack(tokenized_masks).squeeze()
 dev_Y = torch.tensor([emotion_to_idx[e] for e in emotion])
 
 # Create development dataloaders
-dev_data = TensorDataset(train_tokens, train_masks, train_Y)
-dev_sampler = SequentialSampler(train_data)
-dev_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=10)
+dev_data = TensorDataset(dev_tokens, dev_masks, dev_Y)
+dev_sampler = SequentialSampler(dev_data)
+dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, batch_size=10)
 
 if arg:
     model = BertForSequenceClassification.from_pretrained(arg)

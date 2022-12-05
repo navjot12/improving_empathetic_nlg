@@ -64,6 +64,9 @@ parser.add_argument("--filter", type=int, default=50)
 ## wandb
 parser.add_argument("--wandb_project", type=str, default=None)
 
+## pec
+parser.add_argument("--pec", action="store_true")
+
 def print_opts(opts):
     """Prints the values of all command-line arguments.
     """
@@ -143,3 +146,7 @@ if arg.wandb_project:
     wandb.init(project=arg.wandb_project, entity="improving-empathetic-nlg")
     wandb.config = vars(arg)
 
+## pec
+data_dir = 'empathetic-dialogue/'
+if arg.pec:
+    data_dir = 'pec/'

@@ -8,7 +8,7 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler, Sequentia
 from transformers import AdamW, BertForSequenceClassification, BertTokenizer
 
 arg = sys.argv[1]
-epochs = sys.argv[2] if sys.argv[2] else 4
+epochs = int(sys.argv[2]) if sys.argv[2] else 4
 
 tokenizer = BertTokenizer.from_pretrained(
     'bert-base-cased', truncation_side='right')

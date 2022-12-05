@@ -1,10 +1,13 @@
 import numpy as np
+import sys
 import torch
 
 from tqdm import tqdm
 
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from transformers import AdamW, BertForSequenceClassification, BertTokenizer
+
+arg = sys.argv[1]
 
 tokenizer = BertTokenizer.from_pretrained(
     'bert-base-cased', truncation_side='right')
@@ -67,11 +70,16 @@ dev_data = TensorDataset(train_tokens, train_masks, train_Y)
 dev_sampler = SequentialSampler(train_data)
 dev_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=10)
 
-model = BertForSequenceClassification.from_pretrained(
-    "bert-base-uncased",
-    num_labels=len(emotion_to_idx),
-    output_attentions=False,
-    output_hidden_states=False,)
+if arg:
+    model = BertForSequenceClassification.from_pretrained(arg)
+    print("loaded model {}".format(arg))
+    print(model)
+else:
+    model = BertForSequenceClassification.from_pretrained(
+        "bert-base-uncased",
+        num_labels=len(emotion_to_idx),
+        output_attentions=False,
+        output_hidden_states=False,)
 
 optimizer = AdamW(model.parameters(), lr=2e-5, eps=1e-8)
 

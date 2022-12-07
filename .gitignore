@@ -3,6 +3,7 @@
 /MoEL/wandb/
 
 /MoEL/*/*.p
+/MoEL/pec_*/*persona_embedding*
 /MoEL/pec*/sys_target_texts.train.npy
 
 /pec/pec*

@@ -65,7 +65,8 @@ parser.add_argument("--filter", type=int, default=50)
 parser.add_argument("--wandb_project", type=str, default=None)
 
 ## pec
-parser.add_argument("--pec", action="store_true")
+parser.add_argument("--pec_2", action="store_true")
+parser.add_argument("--pec_32", action="store_true")
 
 def print_opts(opts):
     """Prints the values of all command-line arguments.
@@ -148,5 +149,7 @@ if arg.wandb_project:
 
 ## pec
 data_dir = 'empathetic-dialogue/'
-if arg.pec:
-    data_dir = 'pec/'
+if arg.pec_2:
+    data_dir = 'pec_2/'
+elif arg.pec_32:
+    data_dir = 'pec_32/'

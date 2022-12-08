@@ -24,8 +24,7 @@ parser.add_argument("--batch_size", type=int, default=16)
 parser.add_argument("--lr", type=float, default=0.0001)
 parser.add_argument("--max_grad_norm", type=float, default=2.0)
 parser.add_argument("--beam_size", type=int, default=5)
-parser.add_argument("--save_path", type=str, default="save/test/")
-parser.add_argument("--save_path_dataset", type=str, default="save/")
+parser.add_argument("--save_path", type=str, default="save/")
 parser.add_argument("--cuda", action="store_true")
 
 parser.add_argument("--pointer_gen", action="store_true")
@@ -64,12 +63,12 @@ parser.add_argument("--filter", type=int, default=50)
 ## wandb
 parser.add_argument("--wandb_project", type=str, default=None)
 
+## ED grouped emotions
+parser.add_argument("--ed_16", action="store_true")
+
 ## pec
 parser.add_argument("--pec_2", action="store_true")
 parser.add_argument("--pec_32", action="store_true")
-
-## grouped emotions
-parser.add_argument("--grouped_emotions", action="store_true")
 
 def print_opts(opts):
     """Prints the values of all command-line arguments.
@@ -119,13 +118,7 @@ epochs = 10000
 emb_file = arg.emb_file or "vectors/glove.6B.{}d.txt".format(str(emb_dim))
 pretrain_emb = arg.pretrain_emb
 
-save_path = arg.save_path
-save_path_dataset = arg.save_path_dataset
-
 test = arg.test
-if(not test):
-    save_path_dataset = save_path
-
 
 ### transformer 
 hop = arg.hop
@@ -156,8 +149,7 @@ if arg.pec_2:
     data_dir = 'pec_2/'
 elif arg.pec_32:
     data_dir = 'pec_32/'
+elif arg.ed_16:
+    data_dir = 'ed_16/'
 
-grouped_emotions = arg.grouped_emotions
-if grouped_emotions:
-    save_path += '/grouped_emotions/'
-    save_path_dataset += '/grouped_emotions/'
+save_path = arg.save_path + data_dir

@@ -28,7 +28,7 @@ class Dataset(data.Dataset):
         self.vocab = vocab
         self.data = data
 
-        if config.grouped_emotions:
+        if config.data_dir == 'ed_16/':
             self.emo_map = {'afraid_terrified_anxious': 0, 'angry_annoyed_furious': 1, 'caring': 2, 'disappointed_disgusted': 3,
                             'excited_joyful': 4, 'grateful_content': 5, 'guilty_embarrassed_ashamed': 6, 'hopeful_confident': 7,
                             'jealous': 8, 'lonely': 9, 'prepared_anticipating_apprehensive': 10, 'proud_impressed': 11,

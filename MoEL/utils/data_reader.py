@@ -142,5 +142,10 @@ def load_dataset():
         print('[context]:', [' '.join(u) for u in data_tra['context'][i]])
         print('[target]:', ' '.join(data_tra['target'][i]))
         print(" ")
+
+    print('Unique emotions and counts in Training data:',)
+    emotions, counts = np.unique(data_tra['emotion'], return_counts=True)
+    print([emo_counts for emo_counts in zip(emotions, counts)])
+
     return data_tra, data_val, data_tst, vocab
 

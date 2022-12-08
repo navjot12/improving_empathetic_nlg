@@ -1,10 +1,16 @@
 import numpy as np
+import sys
 import torch
 
 from tqdm import tqdm
 
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 from transformers import AdamW, BertForSequenceClassification, BertTokenizer
+
+# Run with python3 main.py [dir-of-model] [num-of-epochs]
+
+arg = sys.argv[1]
+epochs = int(sys.argv[2]) if sys.argv[2] else 4
 
 tokenizer = BertTokenizer.from_pretrained(
     'bert-base-cased', truncation_side='right')
@@ -63,15 +69,19 @@ dev_masks = torch.stack(tokenized_masks).squeeze()
 dev_Y = torch.tensor([emotion_to_idx[e] for e in emotion])
 
 # Create development dataloaders
-dev_data = TensorDataset(train_tokens, train_masks, train_Y)
-dev_sampler = SequentialSampler(train_data)
-dev_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=10)
+dev_data = TensorDataset(dev_tokens, dev_masks, dev_Y)
+dev_sampler = SequentialSampler(dev_data)
+dev_dataloader = DataLoader(dev_data, sampler=dev_sampler, batch_size=10)
 
-model = BertForSequenceClassification.from_pretrained(
-    "bert-base-uncased",
-    num_labels=len(emotion_to_idx),
-    output_attentions=False,
-    output_hidden_states=False,)
+if arg:
+    model = BertForSequenceClassification.from_pretrained(arg)
+    print("loaded model {}".format(arg))
+else:
+    model = BertForSequenceClassification.from_pretrained(
+        "bert-base-uncased",
+        num_labels=len(emotion_to_idx),
+        output_attentions=False,
+        output_hidden_states=False,)
 
 optimizer = AdamW(model.parameters(), lr=2e-5, eps=1e-8)
 
@@ -82,7 +92,8 @@ else:
     device = torch.device("cpu")
 
 print("training")
-for epoch in range(0, 4):
+for epoch in range(0, epochs):
+    print("Epoch: {} of {}".format(epoch, epochs))
     loss = 0
     model.train()
 
@@ -97,6 +108,8 @@ for epoch in range(0, 4):
         output[0].backward()
         optimizer.step()
 
+    model.save_pretrained("./epoch_{}".format(epoch))
+
     model.eval()
 
     eval_loss, eval_accuracy = 0, 0
@@ -110,7 +123,5 @@ for epoch in range(0, 4):
         eval_accuracy += np.sum(
             np.argmax(logits, axis=1).flatten() == labels.flatten()) / len(labels.flatten())
 
-    print("Epoch: {} \tTraining loss: {} \tAccuracy: {}".format(
-        epoch, loss, eval_accuracy/len(dev_dataloader)))
-
-model.save_pretrained(".")
+    print("Training loss: {} \tAccuracy: {}".format(
+        loss, eval_accuracy/len(dev_dataloader)))

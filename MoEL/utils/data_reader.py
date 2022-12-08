@@ -46,35 +46,21 @@ def clean(sentence, word_pairs):
     return sentence
 def read_langs(vocab):
     word_pairs = {"it's":"it is", "don't":"do not", "doesn't":"does not", "didn't":"did not", "you'd":"you would", "you're":"you are", "you'll":"you will", "i'm":"i am", "they're":"they are", "that's":"that is", "what's":"what is", "couldn't":"could not", "i've":"i have", "we've":"we have", "can't":"cannot", "i'd":"i would", "i'd":"i would", "aren't":"are not", "isn't":"is not", "wasn't":"was not", "weren't":"were not", "won't":"will not", "there's":"there is", "there're":"there are"}
-    train_context = np.load('empathetic-dialogue/sys_dialog_texts.train.npy',allow_pickle=True)
-    train_target = np.load('empathetic-dialogue/sys_target_texts.train.npy',allow_pickle=True)
 
-    if config.grouped_emotions:
-        train_emotion = np.load('empathetic-dialogue/sys_grouped_emotion_texts.train.npy',allow_pickle=True)
-    else:
-        train_emotion = np.load('empathetic-dialogue/sys_emotion_texts.train.npy', allow_pickle=True)
+    train_context = np.load(config.data_dir + 'sys_dialog_texts.train.npy',allow_pickle=True)
+    train_target = np.load(config.data_dir + 'sys_target_texts.train.npy',allow_pickle=True)
+    train_emotion = np.load(config.data_dir + 'sys_emotion_texts.train.npy',allow_pickle=True)
+    train_situation = np.load(config.data_dir + 'sys_situation_texts.train.npy',allow_pickle=True)
 
-    train_situation = np.load('empathetic-dialogue/sys_situation_texts.train.npy',allow_pickle=True)
-
-    dev_context = np.load('empathetic-dialogue/sys_dialog_texts.dev.npy',allow_pickle=True)
-    dev_target = np.load('empathetic-dialogue/sys_target_texts.dev.npy',allow_pickle=True)
-
-    if config.grouped_emotions:
-        dev_emotion = np.load('empathetic-dialogue/sys_grouped_emotion_texts.dev.npy',allow_pickle=True)
-    else:
-        dev_emotion = np.load('empathetic-dialogue/sys_emotion_texts.dev.npy', allow_pickle=True)
-
-    dev_situation = np.load('empathetic-dialogue/sys_situation_texts.dev.npy',allow_pickle=True)
+    dev_context = np.load(config.data_dir + 'sys_dialog_texts.dev.npy',allow_pickle=True)
+    dev_target = np.load(config.data_dir + 'sys_target_texts.dev.npy',allow_pickle=True)
+    dev_emotion = np.load(config.data_dir + 'sys_emotion_texts.dev.npy',allow_pickle=True)
+    dev_situation = np.load(config.data_dir + 'sys_situation_texts.dev.npy',allow_pickle=True)
     
-    test_context = np.load('empathetic-dialogue/sys_dialog_texts.test.npy',allow_pickle=True)
-    test_target = np.load('empathetic-dialogue/sys_target_texts.test.npy',allow_pickle=True)
-
-    if config.grouped_emotions:
-        test_emotion = np.load('empathetic-dialogue/sys_grouped_emotion_texts.test.npy',allow_pickle=True)
-    else:
-        test_emotion = np.load('empathetic-dialogue/sys_emotion_texts.test.npy', allow_pickle=True)
-
-    test_situation = np.load('empathetic-dialogue/sys_situation_texts.test.npy',allow_pickle=True)
+    test_context = np.load(config.data_dir + 'sys_dialog_texts.test.npy',allow_pickle=True)
+    test_target = np.load(config.data_dir + 'sys_target_texts.test.npy',allow_pickle=True)
+    test_emotion = np.load(config.data_dir + 'sys_emotion_texts.test.npy',allow_pickle=True)
+    test_situation = np.load(config.data_dir + 'sys_situation_texts.test.npy',allow_pickle=True)
 
     data_train = {'context':[],'target':[],'emotion':[], 'situation':[]}
     data_dev = {'context':[],'target':[],'emotion':[], 'situation':[]}
@@ -140,19 +126,14 @@ def read_langs(vocab):
 
 
 def load_dataset():
-    if config.grouped_emotions:
-        preproc_file = 'empathetic-dialogue/dataset_preproc_grouped_emotions.p'
-    else:
-        preproc_file = 'empathetic-dialogue/dataset_preproc.p'
-
-    if(os.path.exists(preproc_file)):
-        print("LOADING empathetic_dialogue")
-        with open(preproc_file, "rb") as f:
+    if(os.path.exists(config.data_dir + 'dataset_preproc.p')):
+        print("LOADING " + config.data_dir)
+        with open(config.data_dir + 'dataset_preproc.p', "rb") as f:
             [data_tra, data_val, data_tst, vocab] = pickle.load(f)
     else:
         print("Building dataset...")
         data_tra, data_val, data_tst, vocab  = read_langs(vocab=Lang({config.UNK_idx: "UNK", config.PAD_idx: "PAD", config.EOS_idx: "EOS", config.SOS_idx: "SOS", config.USR_idx:"USR", config.SYS_idx:"SYS", config.CLS_idx:"CLS"})) 
-        with open(preproc_file, "wb") as f:
+        with open(config.data_dir + 'dataset_preproc.p', "wb") as f:
             pickle.dump([data_tra, data_val, data_tst, vocab], f)
             print("Saved PICKLE")
     for i in range(3):

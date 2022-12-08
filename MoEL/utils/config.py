@@ -64,6 +64,10 @@ parser.add_argument("--filter", type=int, default=50)
 ## wandb
 parser.add_argument("--wandb_project", type=str, default=None)
 
+## pec
+parser.add_argument("--pec_2", action="store_true")
+parser.add_argument("--pec_32", action="store_true")
+
 ## grouped emotions
 parser.add_argument("--grouped_emotions", action="store_true")
 
@@ -146,8 +150,14 @@ if arg.wandb_project:
     wandb.init(project=arg.wandb_project, entity="improving-empathetic-nlg")
     wandb.config = vars(arg)
 
+## pec
+data_dir = 'empathetic-dialogue/'
+if arg.pec_2:
+    data_dir = 'pec_2/'
+elif arg.pec_32:
+    data_dir = 'pec_32/'
+
 grouped_emotions = arg.grouped_emotions
 if grouped_emotions:
     save_path += '/grouped_emotions/'
     save_path_dataset += '/grouped_emotions/'
-

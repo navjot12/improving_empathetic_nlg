@@ -57,6 +57,8 @@ class Dataset(data.Dataset):
         item["target"] = self.preprocess(item["target_text"], anw=True)
         item["emotion"], item["emotion_label"] = self.preprocess_emo(item["emotion_text"], self.emo_map)
 
+        item["persona"] = self.data["persona"][index]
+
         return item
 
     def preprocess(self, arr, anw=False):
@@ -102,11 +104,14 @@ def collate_fn(data):
     ## Target
     target_batch, target_lengths   = merge(item_info['target'])
 
+    ## Persona
+    persona_batch = torch.from_numpy(np.array(item_info['persona']))
 
     if config.USE_CUDA:
         input_batch = input_batch.cuda()
         mask_input = mask_input.cuda()
         target_batch = target_batch.cuda()
+        persona_batch = persona_batch.cuda()
  
     d = {}
     d["input_batch"] = input_batch
@@ -117,6 +122,9 @@ def collate_fn(data):
     ##program
     d["target_program"] = item_info['emotion']
     d["program_label"] = item_info['emotion_label']
+
+    ## personas
+    d["persona"] = persona_batch
 
     ##text
     d["input_txt"] = item_info['context_text']

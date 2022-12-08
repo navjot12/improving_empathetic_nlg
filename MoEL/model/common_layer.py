@@ -686,6 +686,7 @@ def get_attn_key_pad_mask(seq_k, seq_q):
 def get_input_from_batch(batch):
     enc_batch = batch["input_batch"]
     enc_lens = batch["input_lengths"]
+    persona_batch = batch['persona_batch']
     batch_size, max_enc_len = enc_batch.size()
     assert len(enc_lens) == batch_size
 
@@ -717,7 +718,7 @@ def get_input_from_batch(batch):
         if coverage is not None:
             coverage = coverage.cuda()
 
-    return enc_batch, enc_padding_mask, enc_lens, enc_batch_extend_vocab, extra_zeros, c_t_1, coverage
+    return enc_batch, enc_padding_mask, enc_lens, enc_batch_extend_vocab, extra_zeros, c_t_1, coverage, persona_batch
 
 def get_output_from_batch(batch):
 

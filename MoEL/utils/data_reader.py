@@ -51,20 +51,23 @@ def read_langs(vocab):
     train_target = np.load(config.data_dir + 'sys_target_texts.train.npy',allow_pickle=True)
     train_emotion = np.load(config.data_dir + 'sys_emotion_texts.train.npy',allow_pickle=True)
     train_situation = np.load(config.data_dir + 'sys_situation_texts.train.npy',allow_pickle=True)
+    train_persona = np.load(config.data_dir + 'sys_persona_embedding.train.npy',allow_pickle=True)
 
     dev_context = np.load(config.data_dir + 'sys_dialog_texts.dev.npy',allow_pickle=True)
     dev_target = np.load(config.data_dir + 'sys_target_texts.dev.npy',allow_pickle=True)
     dev_emotion = np.load(config.data_dir + 'sys_emotion_texts.dev.npy',allow_pickle=True)
     dev_situation = np.load(config.data_dir + 'sys_situation_texts.dev.npy',allow_pickle=True)
+    dev_persona = np.load(config.data_dir + 'sys_persona_embedding.dev.npy',allow_pickle=True)
     
     test_context = np.load(config.data_dir + 'sys_dialog_texts.test.npy',allow_pickle=True)
     test_target = np.load(config.data_dir + 'sys_target_texts.test.npy',allow_pickle=True)
     test_emotion = np.load(config.data_dir + 'sys_emotion_texts.test.npy',allow_pickle=True)
     test_situation = np.load(config.data_dir + 'sys_situation_texts.test.npy',allow_pickle=True)
+    test_persona = np.load(config.data_dir + 'sys_persona_embedding.test.npy',allow_pickle=True)
 
-    data_train = {'context':[],'target':[],'emotion':[], 'situation':[]}
-    data_dev = {'context':[],'target':[],'emotion':[], 'situation':[]}
-    data_test = {'context':[],'target':[],'emotion':[], 'situation':[]}
+    data_train = {'context':[],'target':[],'emotion':[], 'situation':[], 'persona':[]}
+    data_dev = {'context':[],'target':[],'emotion':[], 'situation':[], 'persona':[]}
+    data_test = {'context':[],'target':[],'emotion':[], 'situation':[], 'persona':[]}
 
     for context in train_context:
         u_list = []
@@ -83,7 +86,9 @@ def read_langs(vocab):
         vocab.index_words(situation)
     for emotion in train_emotion:
         data_train['emotion'].append(emotion)
-    assert len(data_train['context']) == len(data_train['target']) == len(data_train['emotion']) == len(data_train['situation'])
+    for persona in train_persona:
+        data_train['persona'].append(persona)
+    assert len(data_train['context']) == len(data_train['target']) == len(data_train['emotion']) == len(data_train['situation']) == len(data_train['persona'])
 
     for context in dev_context:
         u_list = []
@@ -102,7 +107,9 @@ def read_langs(vocab):
         vocab.index_words(situation)
     for emotion in dev_emotion:
         data_dev['emotion'].append(emotion)
-    assert len(data_dev['context']) == len(data_dev['target']) == len(data_dev['emotion']) == len(data_dev['situation'])
+    for persona in dev_persona:
+        data_dev['persona'].append(persona)
+    assert len(data_dev['context']) == len(data_dev['target']) == len(data_dev['emotion']) == len(data_dev['situation']) == len(data_dev['persona'])
 
     for context in test_context:
         u_list = []
@@ -121,7 +128,9 @@ def read_langs(vocab):
         vocab.index_words(situation)
     for emotion in test_emotion:
         data_test['emotion'].append(emotion)
-    assert len(data_test['context']) == len(data_test['target']) == len(data_test['emotion']) == len(data_test['situation'])
+    for persona in test_persona:
+        data_test['persona'].append(persona)
+    assert len(data_test['context']) == len(data_test['target']) == len(data_test['emotion']) == len(data_test['situation']) == len(data_test['persona'])
     return data_train, data_dev, data_test, vocab
 
 
@@ -140,6 +149,7 @@ def load_dataset():
         print('[situation]:', ' '.join(data_tra['situation'][i]))
         print('[emotion]:', data_tra['emotion'][i])
         print('[context]:', [' '.join(u) for u in data_tra['context'][i]])
+        print('[persona]:', data_tra['persona'][:25])
         print('[target]:', ' '.join(data_tra['target'][i]))
         print(" ")
 

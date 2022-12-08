@@ -70,6 +70,9 @@ parser.add_argument("--ed_16", action="store_true")
 parser.add_argument("--pec_2", action="store_true")
 parser.add_argument("--pec_32", action="store_true")
 
+## use personas
+parser.add_argument("--use_persona", action="store_true")
+
 def print_opts(opts):
     """Prints the values of all command-line arguments.
     """
@@ -153,3 +156,6 @@ elif arg.ed_16:
     data_dir = 'ed_16/'
 
 save_path = arg.save_path + data_dir
+
+## personas
+use_persona = arg.use_persona

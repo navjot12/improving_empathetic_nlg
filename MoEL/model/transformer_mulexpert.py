@@ -473,7 +473,7 @@ class Transformer_experts(nn.Module):
         return loss
 
     def decoder_greedy(self, batch, max_dec_step=30):
-        enc_batch, _, _, enc_batch_extend_vocab, extra_zeros, _, _ = get_input_from_batch(batch)
+        enc_batch, _, _, enc_batch_extend_vocab, extra_zeros, _, _, persona_batch = get_input_from_batch(batch)
         mask_src = enc_batch.data.eq(config.PAD_idx).unsqueeze(1)
         emb_mask = self.embedding(batch["mask_input"])
         encoder_outputs = self.encoder(self.embedding(enc_batch)+emb_mask,mask_src)
@@ -528,7 +528,7 @@ class Transformer_experts(nn.Module):
         return sent
 
     def decoder_topk(self, batch, max_dec_step=30):
-        enc_batch, _, _, enc_batch_extend_vocab, extra_zeros, _, _ = get_input_from_batch(batch)
+        enc_batch, _, _, enc_batch_extend_vocab, extra_zeros, _, _, persona_batch = get_input_from_batch(batch)
         mask_src = enc_batch.data.eq(config.PAD_idx).unsqueeze(1)
         emb_mask = self.embedding(batch["mask_input"])
         encoder_outputs = self.encoder(self.embedding(enc_batch)+emb_mask,mask_src)

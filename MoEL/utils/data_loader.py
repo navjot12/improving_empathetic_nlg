@@ -27,7 +27,13 @@ class Dataset(data.Dataset):
         """Reads source and target sequences from txt files."""
         self.vocab = vocab
         self.data = data
-        if config.data_dir == 'pec/':
+
+        if config.grouped_emotions:
+            self.emo_map = {'afraid_terrified_anxious': 0, 'angry_annoyed_furious': 1, 'caring': 2, 'disappointed_disgusted': 3,
+                            'excited_joyful': 4, 'grateful_content': 5, 'guilty_embarrassed_ashamed': 6, 'hopeful_confident': 7,
+                            'jealous': 8, 'lonely': 9, 'prepared_anticipating_apprehensive': 10, 'proud_impressed': 11,
+                            'sad_devastated': 12, 'sentimental_nostalgic': 13, 'surprised': 14, 'trusting_faithful': 15}
+        elif config.data_dir == 'pec_2/':
             self.emo_map = {'happy': 0, 'offmychest': 1}
         else:
             self.emo_map = {
@@ -35,6 +41,7 @@ class Dataset(data.Dataset):
             'impressed': 8, 'afraid': 9, 'disgusted': 10, 'confident': 11, 'terrified': 12, 'hopeful': 13, 'anxious': 14, 'disappointed': 15,
             'joyful': 16, 'prepared': 17, 'guilty': 18, 'furious': 19, 'nostalgic': 20, 'jealous': 21, 'anticipating': 22, 'embarrassed': 23,
             'content': 24, 'devastated': 25, 'sentimental': 26, 'caring': 27, 'trusting': 28, 'ashamed': 29, 'apprehensive': 30, 'faithful': 31}
+
     def __len__(self):
         return len(self.data["target"])
 

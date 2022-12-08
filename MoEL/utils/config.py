@@ -68,6 +68,9 @@ parser.add_argument("--wandb_project", type=str, default=None)
 parser.add_argument("--pec_2", action="store_true")
 parser.add_argument("--pec_32", action="store_true")
 
+## grouped emotions
+parser.add_argument("--grouped_emotions", action="store_true")
+
 def print_opts(opts):
     """Prints the values of all command-line arguments.
     """
@@ -153,3 +156,8 @@ if arg.pec_2:
     data_dir = 'pec_2/'
 elif arg.pec_32:
     data_dir = 'pec_32/'
+
+grouped_emotions = arg.grouped_emotions
+if grouped_emotions:
+    save_path += '/grouped_emotions/'
+    save_path_dataset += '/grouped_emotions/'

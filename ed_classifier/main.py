@@ -104,7 +104,7 @@ for epoch in range(0, epochs):
     loss = 0
     model.train()
 
-    for step, batch in enumerate(tqdm(train_dataloader)):
+    for step, batch in enumerate(pbar := tqdm(train_dataloader)):
         model.zero_grad()
 
         output = model(batch[0].to(device), token_type_ids=None,
@@ -114,6 +114,7 @@ for epoch in range(0, epochs):
         loss += output[0].item()
         output[0].backward()
         optimizer.step()
+        pbar.set_description("Loss: {}".format(loss/(step+1)))
 
     model.save_pretrained("./modified_epoch_{}".format(epoch))
 

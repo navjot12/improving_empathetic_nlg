@@ -41,3 +41,4 @@ Optional arguments:
 1. `--ed_16` : To train MoEL on the empathetic-dialogue dataset with 16 emotions. This needs the numpy arrays required by MoEL to be present in ed_16 folder.
 1. `--pec_2` : To train MoEL on pec dataset with 2 emotions. This needs the numpy arrays required by MoEL to be present in pec_2 folder.
 1. `--pec_32` : To train MoEL on pec dataset with 32 emotions. This needs the numpy arrays required by MoEL to be present in pec_32 folder.
+1. `--use_persona` : To train MoEL with persona embeddings pec dataset with 32 emotions. This needs the corresponding numpy arrays to be present.

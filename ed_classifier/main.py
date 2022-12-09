@@ -9,8 +9,8 @@ from transformers import AdamW, BertForSequenceClassification, BertTokenizer
 
 # Run with python3 main.py [dir-of-model] [num-of-epochs]
 
-arg = sys.argv[1]
-epochs = int(sys.argv[2]) if sys.argv[2] else 4
+arg = sys.argv[1] if len(sys.argv) > 1 else None
+epochs = int(sys.argv[2]) if len(sys.argv) > 2 else 4
 
 tokenizer = BertTokenizer.from_pretrained(
     'bert-base-cased', truncation_side='right')

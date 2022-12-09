@@ -1,4 +1,4 @@
-
+import numpy as np
 import torch
 import torch.utils.data as data
 import random
@@ -124,7 +124,7 @@ def collate_fn(data):
     d["program_label"] = item_info['emotion_label']
 
     ## personas
-    d["persona"] = persona_batch
+    d["persona_batch"] = persona_batch
 
     ##text
     d["input_txt"] = item_info['context_text']

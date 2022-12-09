@@ -390,7 +390,6 @@ class Transformer_experts(nn.Module):
 
     def train_one_batch(self, batch, iter, train=True):
         enc_batch, _, _, enc_batch_extend_vocab, extra_zeros, _, _, persona_batch = get_input_from_batch(batch)
-        print('Persona batch size:', persona_batch.shape)
         dec_batch, _, _, _, _ = get_output_from_batch(batch)
         
         if(config.noam):

@@ -51,19 +51,19 @@ def read_langs(vocab):
     train_target = np.load(config.data_dir + 'sys_target_texts.train.npy',allow_pickle=True)
     train_emotion = np.load(config.data_dir + 'sys_emotion_texts.train.npy',allow_pickle=True)
     train_situation = np.load(config.data_dir + 'sys_situation_texts.train.npy',allow_pickle=True)
-    train_persona = np.load(config.data_dir + 'sys_persona_embedding.train.npy',allow_pickle=True)
+    train_persona = np.load(config.data_dir + 'sys_persona_embedding.train.npy',allow_pickle=True) if config.use_persona or os.path.exists(config.data_dir + 'sys_persona_embedding.train.npy') else np.zeros(train_target.shape)
 
     dev_context = np.load(config.data_dir + 'sys_dialog_texts.dev.npy',allow_pickle=True)
     dev_target = np.load(config.data_dir + 'sys_target_texts.dev.npy',allow_pickle=True)
     dev_emotion = np.load(config.data_dir + 'sys_emotion_texts.dev.npy',allow_pickle=True)
     dev_situation = np.load(config.data_dir + 'sys_situation_texts.dev.npy',allow_pickle=True)
-    dev_persona = np.load(config.data_dir + 'sys_persona_embedding.dev.npy',allow_pickle=True)
+    dev_persona = np.load(config.data_dir + 'sys_persona_embedding.dev.npy',allow_pickle=True) if config.use_persona or os.path.exists(config.data_dir + 'sys_persona_embedding.dev.npy') else np.zeros(dev_target.shape)
     
     test_context = np.load(config.data_dir + 'sys_dialog_texts.test.npy',allow_pickle=True)
     test_target = np.load(config.data_dir + 'sys_target_texts.test.npy',allow_pickle=True)
     test_emotion = np.load(config.data_dir + 'sys_emotion_texts.test.npy',allow_pickle=True)
     test_situation = np.load(config.data_dir + 'sys_situation_texts.test.npy',allow_pickle=True)
-    test_persona = np.load(config.data_dir + 'sys_persona_embedding.test.npy',allow_pickle=True)
+    test_persona = np.load(config.data_dir + 'sys_persona_embedding.test.npy',allow_pickle=True) if config.use_persona or os.path.exists(config.data_dir + 'sys_persona_embedding.test.npy') else np.zeros(test_target.shape)
 
     data_train = {'context':[],'target':[],'emotion':[], 'situation':[], 'persona':[]}
     data_dev = {'context':[],'target':[],'emotion':[], 'situation':[], 'persona':[]}
@@ -149,7 +149,7 @@ def load_dataset():
         print('[situation]:', ' '.join(data_tra['situation'][i]))
         print('[emotion]:', data_tra['emotion'][i])
         print('[context]:', [' '.join(u) for u in data_tra['context'][i]])
-        print('[persona]:', data_tra['persona'][:25])
+        print('[persona]:', data_tra['persona'][i][:10])
         print('[target]:', ' '.join(data_tra['target'][i]))
         print(" ")
 

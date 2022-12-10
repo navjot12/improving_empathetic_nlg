@@ -159,3 +159,4 @@ save_path = arg.save_path + data_dir
 
 ## personas
 use_persona = arg.use_persona
+persona_dim = 3072

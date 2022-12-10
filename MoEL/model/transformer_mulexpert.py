@@ -112,6 +112,77 @@ class Encoder(nn.Module):
             y = self.layer_norm(x)
         return y
 
+class PersonaEncoder(nn.Module):
+        """
+    A multi-headed self-attention Persona Encoder module. 
+    Inputs should be in the shape [batch_size, persona_embedding_size]
+    Outputs will have the shape [batch_size, hidden_size]
+    Refer Fig.1 in https://arxiv.org/pdf/1706.03762.pdf
+    """
+    def __init__(self, persona_embedding_size, hidden_size, num_layers, num_heads, total_key_depth, total_value_depth,
+                 filter_size, max_length=1000, input_dropout=0.0, layer_dropout=0.0, 
+                 attention_dropout=0.0, relu_dropout=0.0, use_mask=False):
+        """
+        Parameters:
+            persona_embedding_size: Size of persona embeddings
+            hidden_size: Hidden size
+            num_layers: Total layers in the Persona Encoder
+            num_heads: Number of attention heads
+            total_key_depth: Size of last dimension of keys. Must be divisible by num_head
+            total_value_depth: Size of last dimension of values. Must be divisible by num_head
+            output_depth: Size last dimension of the final output
+            filter_size: Hidden size of the middle layer in FFN
+            max_length: Max sequence length (required for timing signal)
+            input_dropout: Dropout just after embedding
+            layer_dropout: Dropout for each layer
+            attention_dropout: Dropout probability after attention (Should be non-zero only during training)
+            relu_dropout: Dropout probability after relu in FFN (Should be non-zero only during training)
+            use_mask: Set to True to turn on future value masking
+        """
+        
+        super(PersonaEncoder, self).__init__()
+        self.num_layers = num_layers
+
+        params =(persona_embedding_size,
+                 total_key_depth or persona_embedding_size,
+                 total_value_depth or persona_embedding_size,
+                 int(persona_embedding_size / 2), 
+                 num_heads, 
+                 None,
+                 layer_dropout, 
+                 attention_dropout, 
+                 relu_dropout,
+                 'll')            # Persona embedding
+
+        if(self.universal):
+            self.persona_enc = EncoderLayer(*params)
+        else:
+            self.persona_enc = nn.ModuleList([EncoderLayer(*params) for _ in range(num_layers)])
+
+        self.layer_norm = LayerNorm(hidden_size)
+        self.input_dropout = nn.Dropout(input_dropout)
+        self.embedding_proj = nn.Linear(persona_embedding_size, hidden_size, bias=False)
+
+
+    def forward(self, inputs):
+        #Add input dropout
+        x = self.input_dropout(inputs)
+        
+        if(self.universal):
+            for l in range(self.num_layers):
+                x = self.persona_enc(x)
+        else:
+            for i in range(self.num_layers):
+                x = self.persona_enc[i](x)
+        
+        y = self.layer_norm(x)
+
+        # Project to hidden size
+        y = self.embedding_proj(y)
+
+        return y
+
+
 class Decoder(nn.Module):
     """
     A Transformer Decoder module. 
@@ -243,7 +314,7 @@ class MulDecoder(nn.Module):
         self.input_dropout = nn.Dropout(input_dropout)
 
 
-    def forward(self, inputs, encoder_output, mask, attention_epxert):
+    def forward(self, inputs, encoder_output, mask, attention_epxert, persona_outputs):
         mask_src, mask_trg = mask
         dec_mask = torch.gt(mask_trg + self.mask[:, :mask_trg.size(-1), :mask_trg.size(-1)], 0)
         #Add input dropout
@@ -253,21 +324,21 @@ class MulDecoder(nn.Module):
         x += self.timing_signal[:, :inputs.shape[1], :].type_as(inputs.data)
         expert_outputs = []
         if config.basic_learner:
-            basic_out , _, attn_dist, _ = self.basic((x, encoder_output, [], (mask_src,dec_mask)))
+            basic_out , _, attn_dist, _ = self.basic((x, encoder_output, [], (mask_src,dec_mask), persona_outputs))
 
         #compute experts
         #TODO forward all experts in parrallel
         if (attention_epxert.shape[0]==1 and config.topk>0):
             for i, expert in enumerate(self.experts):
                 if attention_epxert[0, i]>0.0001:         #speed up inference
-                    expert_out , _, attn_dist, _ = expert((x, encoder_output, [], (mask_src,dec_mask)))
+                    expert_out , _, attn_dist, _ = expert((x, encoder_output, [], (mask_src,dec_mask), persona_outputs))
                     expert_outputs.append(attention_epxert[0, i]*expert_out)
             x = torch.stack(expert_outputs, dim=1)
             x = x.sum(dim=1)
                     
         else:
             for i, expert in enumerate(self.experts):
-                expert_out , _, attn_dist, _ = expert((x, encoder_output, [], (mask_src,dec_mask)))
+                expert_out , _, attn_dist, _ = expert((x, encoder_output, [], (mask_src,dec_mask), persona_outputs))
                 expert_outputs.append(expert_out)
             x = torch.stack(expert_outputs, dim=1) #(batch_size, expert_number, len, hidden_size)
             x = attention_epxert * x
@@ -275,7 +346,7 @@ class MulDecoder(nn.Module):
         if config.basic_learner:
             x+=basic_out
         # Run decoder
-        y, _, attn_dist, _ = self.dec((x, encoder_output, [], (mask_src,dec_mask)))
+        y, _, attn_dist, _ = self.dec((x, encoder_output, [], (mask_src,dec_mask), persona_outputs))
 
         # Final layer normalization
         y = self.layer_norm(y)
@@ -325,6 +396,10 @@ class Transformer_experts(nn.Module):
         self.encoder = Encoder(config.emb_dim, config.hidden_dim, num_layers=config.hop, num_heads=config.heads, 
                                 total_key_depth=config.depth, total_value_depth=config.depth,
                                 filter_size=config.filter,universal=config.universal)
+
+        self.persona_encoder = PersonaEncoder(config.persona_dim, config.hidden_dim, num_layers=config.hop, num_heads=config.heads, 
+                                              total_key_depth=config.depth, total_value_depth=config.depth,
+                                              filter_size=config.filter,universal=config.universal)
         self.decoder_number = decoder_number
         ## multiple decoders
         self.decoder = MulDecoder(decoder_number, config.emb_dim, config.hidden_dim,  num_layers=config.hop, num_heads=config.heads, 
@@ -408,6 +483,8 @@ class Transformer_experts(nn.Module):
         #q_h = encoder_outputs[:,0]
         logit_prob = self.decoder_key(q_h) #(bsz, num_experts)
 
+        persona_outputs = self.persona_encoder(persona_batch) if config.use_persona else None
+        
         if(config.topk>0):
             k_max_value, k_max_index = torch.topk(logit_prob, config.topk)
             a = np.empty([logit_prob.shape[0], self.decoder_number])
@@ -430,7 +507,7 @@ class Transformer_experts(nn.Module):
 
         mask_trg = dec_batch_shift.data.eq(config.PAD_idx).unsqueeze(1)
        
-        pre_logit, attn_dist = self.decoder(self.embedding(dec_batch_shift),encoder_outputs, (mask_src,mask_trg), attention_parameters)
+        pre_logit, attn_dist = self.decoder(self.embedding(dec_batch_shift),encoder_outputs, (mask_src,mask_trg), attention_parameters, persona_outputs)
         ## compute output dist
         logit = self.generator(pre_logit,attn_dist,enc_batch_extend_vocab if config.pointer_gen else None, extra_zeros, attn_dist_db=None)
         #logit = F.log_softmax(logit,dim=-1) #fix the name later

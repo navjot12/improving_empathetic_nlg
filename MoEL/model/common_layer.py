@@ -42,7 +42,7 @@ class EncoderLayer(nn.Module):
     NOTE: The layer normalization step has been moved to the input as per latest version of T2T
     """
     def __init__(self, hidden_size, total_key_depth, total_value_depth, filter_size, num_heads,
-                 bias_mask=None, layer_dropout=0.0, attention_dropout=0.0, relu_dropout=0.0):
+                 bias_mask=None, layer_dropout=0.0, attention_dropout=0.0, relu_dropout=0.0, layer_config='cc'):
         """
         Parameters:
             hidden_size: Hidden size
@@ -63,7 +63,7 @@ class EncoderLayer(nn.Module):
                                                        hidden_size, num_heads, bias_mask, attention_dropout)
         
         self.positionwise_feed_forward = PositionwiseFeedForward(hidden_size, filter_size, hidden_size,
-                                                                 layer_config='cc', padding = 'both', 
+                                                                 layer_config=layer_config, padding = 'both', 
                                                                  dropout=relu_dropout)
         self.dropout = nn.Dropout(layer_dropout)
         self.layer_norm_mha = LayerNorm(hidden_size)
@@ -94,6 +94,7 @@ class EncoderLayer(nn.Module):
         # y = self.layer_norm_end(y)
         return y
 
+
 class DecoderLayer(nn.Module):
     """
     Represents one Decoder layer of the Transformer Decoder
@@ -123,6 +124,9 @@ class DecoderLayer(nn.Module):
 
         self.multi_head_attention_enc_dec = MultiHeadAttention(hidden_size, total_key_depth, total_value_depth, 
                                                        hidden_size, num_heads, None, attention_dropout)
+
+        self.multi_head_attention_persona_dec = MultiHeadAttention(hidden_size, total_key_depth, total_value_depth, 
+                                                                   hidden_size, num_heads, None, attention_dropout)
         
         self.positionwise_feed_forward = PositionwiseFeedForward(hidden_size, filter_size, hidden_size,
                                                                  layer_config='cc', padding = 'left', 
@@ -131,6 +135,7 @@ class DecoderLayer(nn.Module):
         self.layer_norm_mha_dec = LayerNorm(hidden_size)
         self.layer_norm_mha_enc = LayerNorm(hidden_size)
         self.layer_norm_ffn = LayerNorm(hidden_size)
+        self.layer_norm_mha_persona = LayerNorm(hidden_size)
         # self.layer_norm_end = LayerNorm(hidden_size)
 
         
@@ -139,7 +144,7 @@ class DecoderLayer(nn.Module):
         NOTE: Inputs is a tuple consisting of decoder inputs and encoder output
         """
 
-        x, encoder_outputs, attention_weight, mask = inputs
+        x, encoder_outputs, attention_weight, mask, persona_outputs = inputs
         mask_src, dec_mask = mask
         
         # Layer Normalization before decoder self attention
@@ -162,6 +167,16 @@ class DecoderLayer(nn.Module):
         
         # Layer Normalization
         x_norm = self.layer_norm_ffn(x)
+
+        if config.use_persona:
+            # Multi-head persona-decoder attention
+            y, attention_weight = self.multi_head_attention_enc_dec(persona_outputs, x_norm, x_norm, dec_mask)
+            
+            # Dropout and residual after encoder-decoder attention
+            x = self.dropout(x + y)
+            
+            # Layer Normalization
+            x_norm = self.layer_norm_mha_persona(x)
         
         # Positionwise Feedforward
         y = self.positionwise_feed_forward(x_norm)

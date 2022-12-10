@@ -121,7 +121,7 @@ class PersonaEncoder(nn.Module):
     """
     def __init__(self, persona_embedding_size, hidden_size, num_layers, num_heads, total_key_depth, total_value_depth,
                  filter_size, max_length=1000, input_dropout=0.0, layer_dropout=0.0,
-                 attention_dropout=0.0, relu_dropout=0.0, use_mask=False):
+                 attention_dropout=0.0, relu_dropout=0.0, use_mask=False, universal=False):
         """
         Parameters:
             persona_embedding_size: Size of persona embeddings
@@ -141,6 +141,7 @@ class PersonaEncoder(nn.Module):
         """
         
         super(PersonaEncoder, self).__init__()
+        self.universal = universal
         self.num_layers = num_layers
 
         params =(persona_embedding_size,
@@ -397,9 +398,11 @@ class Transformer_experts(nn.Module):
                                 total_key_depth=config.depth, total_value_depth=config.depth,
                                 filter_size=config.filter,universal=config.universal)
 
-        self.persona_encoder = PersonaEncoder(config.persona_dim, config.hidden_dim, num_layers=config.hop, num_heads=config.heads, 
-                                              total_key_depth=config.depth, total_value_depth=config.depth,
-                                              filter_size=config.filter,universal=config.universal)
+        if config.use_persona:
+            self.persona_encoder = PersonaEncoder(config.persona_dim, config.hidden_dim, num_layers=config.hop, num_heads=config.heads, 
+                                                  total_key_depth=config.depth, total_value_depth=config.depth,
+                                                  filter_size=config.filter,universal=config.universal)
+
         self.decoder_number = decoder_number
         ## multiple decoders
         self.decoder = MulDecoder(decoder_number, config.emb_dim, config.hidden_dim,  num_layers=config.hop, num_heads=config.heads, 

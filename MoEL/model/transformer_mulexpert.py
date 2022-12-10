@@ -113,14 +113,14 @@ class Encoder(nn.Module):
         return y
 
 class PersonaEncoder(nn.Module):
-        """
+    """
     A multi-headed self-attention Persona Encoder module. 
     Inputs should be in the shape [batch_size, persona_embedding_size]
     Outputs will have the shape [batch_size, hidden_size]
     Refer Fig.1 in https://arxiv.org/pdf/1706.03762.pdf
     """
     def __init__(self, persona_embedding_size, hidden_size, num_layers, num_heads, total_key_depth, total_value_depth,
-                 filter_size, max_length=1000, input_dropout=0.0, layer_dropout=0.0, 
+                 filter_size, max_length=1000, input_dropout=0.0, layer_dropout=0.0,
                  attention_dropout=0.0, relu_dropout=0.0, use_mask=False):
         """
         Parameters:

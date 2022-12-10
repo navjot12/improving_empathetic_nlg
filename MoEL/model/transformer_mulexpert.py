@@ -160,14 +160,14 @@ class PersonaEncoder(nn.Module):
         else:
             self.persona_enc = nn.ModuleList([EncoderLayer(*params) for _ in range(num_layers)])
 
-        self.layer_norm = LayerNorm(hidden_size)
+        self.layer_norm = LayerNorm(persona_embedding_size)
         self.input_dropout = nn.Dropout(input_dropout)
         self.embedding_proj = nn.Linear(persona_embedding_size, hidden_size, bias=False)
 
 
     def forward(self, inputs):
         #Add input dropout
-        x = self.input_dropout(inputs)
+        x = self.input_dropout(inputs.unsqueeze(1))
         
         if(self.universal):
             for l in range(self.num_layers):

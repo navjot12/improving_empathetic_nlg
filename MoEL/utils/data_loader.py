@@ -105,7 +105,7 @@ def collate_fn(data):
     target_batch, target_lengths   = merge(item_info['target'])
 
     ## Persona
-    persona_batch = torch.from_numpy(np.array(item_info['persona']))
+    persona_batch = torch.from_numpy(np.array(item_info['persona'], dtype=np.float32))
 
     if config.USE_CUDA:
         input_batch = input_batch.cuda()

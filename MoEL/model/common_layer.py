@@ -28,7 +28,8 @@ elif(config.model == 'experts'):
 import pprint
 from tqdm import tqdm
 pp = pprint.PrettyPrinter(indent=1)
-import numpy as np
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+analyzer = SentimentIntensityAnalyzer()
 # import matplotlib.pyplot as plt
 
 torch.manual_seed(0)
@@ -814,6 +815,8 @@ def evaluate(model, data,  ty='valid', max_dec_step=30):
     acc = []
     meteor_scores_g = []
     meteor_scores_b = []
+    sentiment_inc_g = []
+    sentiment_inc_b = []
     pbar = tqdm(enumerate(data),total=len(data))
     for j, batch in pbar:
         loss, ppl, bce_prog, acc_prog = model.train_one_batch(batch, 0, train=False)
@@ -842,6 +845,13 @@ def evaluate(model, data,  ty='valid', max_dec_step=30):
                 meteor_scores_g.append(meteor_score([rf.split()], greedy_sent.split()))
                 meteor_scores_b.append(meteor_score([rf.split()], beam_sent.split()))
 
+                rf_sentiment_mag = abs(analyzer.polarity_scores(rf)['compound'])
+                g_sentiment_mag = abs(analyzer.polarity_scores(greedy_sent)['compound'])
+                b_sentiment_mag = abs(analyzer.polarity_scores(beam_sent)['compound'])
+
+                sentiment_inc_g.append(g_sentiment_mag - rf_sentiment_mag)
+                sentiment_inc_b.append(b_sentiment_mag - rf_sentiment_mag)
+
         pbar.set_description("loss:{:.4f} ppl:{:.1f}".format(np.mean(l),ppl))
 
     loss = np.mean(l)
@@ -856,10 +866,13 @@ def evaluate(model, data,  ty='valid', max_dec_step=30):
     meteor_score_g = np.mean(meteor_scores_g or 0)
     meteor_score_b = np.mean(meteor_scores_b or 0)
 
-    print("EVAL\tLoss\tPPL\tAccuracy\tBleu_g\tBleu_b\tMeteor_g\tMeteor_b")
-    print("{}\t{:.4f}\t{:.4f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}".format(ty,loss,ppl, acc, bleu_score_g,bleu_score_b, meteor_score_g, meteor_score_b))
+    sentiment_inc_g = np.mean(sentiment_inc_g or 0)
+    sentiment_inc_b = np.mean(sentiment_inc_b or 0)
+
+    print("EVAL\tLoss\tPPL\tAccuracy\tBleu_g\tBleu_b\tMeteor_g\tMeteor_b\tSentiment_Increase_g\tSentiment_Increase_b")
+    print("{}\t{:.4f}\t{:.4f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.4f}\t{:.4f}".format(ty,loss,ppl, acc, bleu_score_g,bleu_score_b, meteor_score_g, meteor_score_b, sentiment_inc_g, sentiment_inc_b))
     
-    return loss, ppl, bce, acc, bleu_score_g, bleu_score_b, meteor_score_g, meteor_score_b
+    return loss, ppl, bce, acc, bleu_score_g, bleu_score_b, meteor_score_g, meteor_score_b, sentiment_inc_g, sentiment_inc_b
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)

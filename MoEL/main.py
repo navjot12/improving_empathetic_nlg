@@ -78,13 +78,13 @@ try:
             model.epoch = n_iter
             model.__id__logger = 0
 
-            loss_train, ppl_train, bce_train, acc_train, bleu_score_g, bleu_score_b, meteor_score_g, meteor_score_b = evaluate(model, data_loader_tra ,ty="valid", max_dec_step=50)
+            loss_train, ppl_train, bce_train, acc_train, bleu_score_g, bleu_score_b, meteor_score_g, meteor_score_b, sentiment_inc_g, sentiment_inc_b = evaluate(model, data_loader_tra ,ty="valid", max_dec_step=50)
             wandb_dict['loss_train'] = loss_train
             wandb_dict['ppl_train'] = ppl_train
             wandb_dict['bce_train'] = bce_train
             wandb_dict['acc_train'] = acc_train
 
-            loss_val, ppl_val, bce_val, acc_val, bleu_score_g, bleu_score_b, meteor_score_g, meteor_score_b = evaluate(model, data_loader_val ,ty="valid", max_dec_step=50)
+            loss_val, ppl_val, bce_val, acc_val, bleu_score_g, bleu_score_b, meteor_score_g, meteor_score_b, sentiment_inc_g, sentiment_inc_b = evaluate(model, data_loader_val ,ty="valid", max_dec_step=50)
             wandb_dict['loss_valid'] = loss_val
             wandb_dict['ppl_valid'] = ppl_val
             wandb_dict['bce_valid'] = bce_val
@@ -122,12 +122,12 @@ except KeyboardInterrupt:
 model.load_state_dict({ name: weights_best[name] for name in weights_best })
 model.eval()
 model.epoch = 100
-loss_test, ppl_test, bce_test, acc_test, bleu_score_g, bleu_score_b, meteor_score_g, meteor_score_b = evaluate(model, data_loader_tst ,ty="test", max_dec_step=50)
+loss_test, ppl_test, bce_test, acc_test, bleu_score_g, bleu_score_b, meteor_score_g, meteor_score_b, sentiment_inc_g, sentiment_inc_b = evaluate(model, data_loader_tst ,ty="test", max_dec_step=50)
 
 file_summary = config.save_path+"summary.txt"
 with open(file_summary, 'w') as the_file:
-    the_file.write("EVAL\tLoss\tPPL\tAccuracy\tBleu_g\tBleu_b\tMeteor_g\tMeteor_b\n")
-    the_file.write("{}\t{:.4f}\t{:.4f}\t{:.4f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\n".format("test",loss_test,ppl_test, acc_test, bleu_score_g,bleu_score_b, meteor_score_g, meteor_score_b))
+    the_file.write("EVAL\tLoss\tPPL\tAccuracy\tBleu_g\tBleu_b\tMeteor_g\tMeteor_b\tSentiment_Increase_g\tSentiment_Increase_b\n")
+    the_file.write("{}\t{:.4f}\t{:.4f}\t{:.4f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\n".format("test",loss_test,ppl_test, acc_test, bleu_score_g,bleu_score_b, meteor_score_g, meteor_score_b, sentiment_inc_g, sentiment_inc_b))
 
 wandb_dict = {}
 
@@ -139,5 +139,7 @@ wandb_dict['bleu_test_greedy'] = bleu_score_g
 wandb_dict['bleu_test_beam'] = bleu_score_b
 wandb_dict['meteor_test_greedy'] = meteor_score_g
 wandb_dict['meteor_test_beam'] = meteor_score_b
+wandb_dict['sentiment_increase_greedy'] = sentiment_inc_g
+wandb_dict['sentiment_increase_beam'] = sentiment_inc_b
 
 wandb.log(wandb_dict)

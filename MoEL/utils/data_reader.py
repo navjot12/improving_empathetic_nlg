@@ -87,7 +87,7 @@ def read_langs(vocab):
     for emotion in train_emotion:
         data_train['emotion'].append(emotion)
     for persona in train_persona:
-        data_train['persona'].append(persona)
+        data_train['persona'].append(persona.astype(np.double))
     assert len(data_train['context']) == len(data_train['target']) == len(data_train['emotion']) == len(data_train['situation']) == len(data_train['persona'])
 
     for context in dev_context:
@@ -108,7 +108,7 @@ def read_langs(vocab):
     for emotion in dev_emotion:
         data_dev['emotion'].append(emotion)
     for persona in dev_persona:
-        data_dev['persona'].append(persona)
+        data_dev['persona'].append(persona.astype(np.double))
     assert len(data_dev['context']) == len(data_dev['target']) == len(data_dev['emotion']) == len(data_dev['situation']) == len(data_dev['persona'])
 
     for context in test_context:
@@ -129,7 +129,7 @@ def read_langs(vocab):
     for emotion in test_emotion:
         data_test['emotion'].append(emotion)
     for persona in test_persona:
-        data_test['persona'].append(persona)
+        data_test['persona'].append(persona.astype(np.double))
     assert len(data_test['context']) == len(data_test['target']) == len(data_test['emotion']) == len(data_test['situation']) == len(data_test['persona'])
     return data_train, data_dev, data_test, vocab
 

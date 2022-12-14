@@ -852,7 +852,7 @@ def evaluate(model, data,  ty='valid', max_dec_step=30):
                 #hyp_t.append(topk_sent)
                 ref.append(rf)
                 print_custum(emotion= batch["program_txt"][i],
-                            dial=[" ".join(s) for s in batch['input_txt'][i]] if config.dataset=="empathetic" else " ".join(batch['input_txt'][i]),
+                            dial=[" ".join(s) for s in batch['input_txt'][i]] if config.dataset=="empathetic" else " ".join(batch['input_txt'][i][0]),
                             ref=rf,
                             #hyp_t=topk_sent,
                             hyp_g=greedy_sent,

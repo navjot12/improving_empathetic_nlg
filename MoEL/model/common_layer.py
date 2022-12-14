@@ -839,8 +839,8 @@ def evaluate(model, data,  ty='valid', max_dec_step=30):
                             hyp_g=greedy_sent,
                             hyp_b=beam_sent)
 
-                meteor_scores_g.append(meteor_score([rf.split()], hyp_g))
-                meteor_scores_b.append(meteor_score([rf.split()], hyp_b))
+                meteor_scores_g.append(meteor_score([rf.split()], greedy_sent.split()))
+                meteor_scores_b.append(meteor_score([rf.split()], beam_sent.split()))
 
         pbar.set_description("loss:{:.4f} ppl:{:.1f}".format(np.mean(l),ppl))
 

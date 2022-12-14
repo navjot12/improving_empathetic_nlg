@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import torch.nn.init as I
+from nltk.translate.meteor_score import meteor_score
 import numpy as np
 import math
 import os
@@ -811,6 +812,8 @@ def evaluate(model, data,  ty='valid', max_dec_step=30):
     p = []
     bce = []
     acc = []
+    meteor_scores_g = []
+    meteor_scores_b = []
     pbar = tqdm(enumerate(data),total=len(data))
     for j, batch in pbar:
         loss, ppl, bce_prog, acc_prog = model.train_one_batch(batch, 0, train=False)
@@ -834,7 +837,11 @@ def evaluate(model, data,  ty='valid', max_dec_step=30):
                             ref=rf,
                             #hyp_t=topk_sent,
                             hyp_g=greedy_sent,
-                            hyp_b=beam_sent)   
+                            hyp_b=beam_sent)
+
+                meteor_scores_g.append(meteor_score([rf.split()], hyp_g))
+                meteor_scores_b.append(meteor_score([rf.split()], hyp_b))
+
         pbar.set_description("loss:{:.4f} ppl:{:.1f}".format(np.mean(l),ppl))
 
     loss = np.mean(l)
@@ -846,10 +853,13 @@ def evaluate(model, data,  ty='valid', max_dec_step=30):
     bleu_score_b = moses_multi_bleu(np.array(hyp_b), np.array(ref), lowercase=True)
     #bleu_score_t = moses_multi_bleu(np.array(hyp_t), np.array(ref), lowercase=True)
 
-    print("EVAL\tLoss\tPPL\tAccuracy\tBleu_g\tBleu_b")
-    print("{}\t{:.4f}\t{:.4f}\t{:.2f}\t{:.2f}\t{:.2f}".format(ty,loss,ppl, acc, bleu_score_g,bleu_score_b))
+    meteor_score_g = np.mean(meteor_scores_g or 0)
+    meteor_score_b = np.mean(meteor_scores_b or 0)
+
+    print("EVAL\tLoss\tPPL\tAccuracy\tBleu_g\tBleu_b\tMeteor_g\tMeteor_b")
+    print("{}\t{:.4f}\t{:.4f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}\t{:.2f}".format(ty,loss,ppl, acc, bleu_score_g,bleu_score_b, meteor_score_g, meteor_score_b))
     
-    return loss, ppl, bce, acc, bleu_score_g, bleu_score_b
+    return loss, ppl, bce, acc, bleu_score_g, bleu_score_b, meteor_score_g, meteor_score_b
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)

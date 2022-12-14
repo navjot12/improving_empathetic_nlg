@@ -98,7 +98,7 @@ try:
 
             wandb_dict['patience'] = patient
 
-            if config.wandb:
+            if config.log_wandb:
                 wandb.log(wandb_dict)
 
             if (config.model == "experts" and n_iter<13000):

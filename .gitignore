@@ -1,10 +1,9 @@
 /MoEL/vectors/
-/MoEL/save/
 /MoEL/wandb/
 
 /MoEL/*/*.p
-/MoEL/pec_*/*persona_embedding*
-/MoEL/pec*/sys_target_texts.train.npy
+/MoEL/pec_2/*persona_embedding*
+/MoEL/pec_2/sys_target_texts.train.npy
 
 /pec/pec*
 

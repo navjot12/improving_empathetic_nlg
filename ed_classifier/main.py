@@ -9,15 +9,22 @@ from transformers import AdamW, BertForSequenceClassification, BertTokenizer
 
 # Run with python3 main.py [dir-of-model] [num-of-epochs]
 
-arg = sys.argv[1]
-epochs = int(sys.argv[2]) if sys.argv[2] else 4
+arg = sys.argv[1] if len(sys.argv) > 1 else None
+epochs = int(sys.argv[2]) if len(sys.argv) > 2 else 4
 
 tokenizer = BertTokenizer.from_pretrained(
     'bert-base-cased', truncation_side='right')
 
 max_length = 512
-emotion_to_idx = {'surprised': 0, 'excited': 1, 'annoyed': 2, 'proud': 3, 'angry': 4, 'sad': 5, 'grateful': 6, 'lonely': 7, 'impressed': 8, 'afraid': 9, 'disgusted': 10, 'confident': 11, 'terrified': 12, 'hopeful': 13, 'anxious': 14, 'disappointed': 15,
-                  'joyful': 16, 'prepared': 17, 'guilty': 18, 'furious': 19, 'nostalgic': 20, 'jealous': 21, 'anticipating': 22, 'embarrassed': 23, 'content': 24, 'devastated': 25, 'sentimental': 26, 'caring': 27, 'trusting': 28, 'ashamed': 29, 'apprehensive': 30, 'faithful': 31}
+
+# Original indices
+# emotion_to_idx = {'surprised': 0, 'excited': 1, 'annoyed': 2, 'proud': 3, 'angry': 4, 'sad': 5, 'grateful': 6, 'lonely': 7, 'impressed': 8, 'afraid': 9, 'disgusted': 10, 'confident': 11, 'terrified': 12, 'hopeful': 13, 'anxious': 14, 'disappointed': 15,
+#                   'joyful': 16, 'prepared': 17, 'guilty': 18, 'furious': 19, 'nostalgic': 20, 'jealous': 21, 'anticipating': 22, 'embarrassed': 23, 'content': 24, 'devastated': 25, 'sentimental': 26, 'caring': 27, 'trusting': 28, 'ashamed': 29, 'apprehensive': 30, 'faithful': 31}
+
+# Modified indices
+emotion_to_idx = {'lonely': 0, 'guilty': 1, 'embarrassed': 1, 'ashamed': 1, 'jealous': 2, 'grateful': 3, 'content': 3, 'surprised': 4, 'caring': 5, 'disappointed': 6, 'disgusted': 6, 'angry': 7, 'annoyed': 7, 'furious': 7, 'prepared': 8, 'anticipating': 8,
+                  'apprehensive': 8, 'hopeful': 9, 'confident': 9, 'sad': 10, 'devastated': 10, 'trusting': 11, 'faithful': 11, 'proud': 12, 'impressed': 12, 'excited': 13, 'joyful': 13, 'sentimental': 14, 'nostalgic': 14, 'afraid': 15, 'terrified': 15, 'anxious': 15}
+num_labels = 16
 
 print("Loading data")
 
@@ -79,7 +86,7 @@ if arg:
 else:
     model = BertForSequenceClassification.from_pretrained(
         "bert-base-uncased",
-        num_labels=len(emotion_to_idx),
+        num_labels=16,
         output_attentions=False,
         output_hidden_states=False,)
 
@@ -97,7 +104,7 @@ for epoch in range(0, epochs):
     loss = 0
     model.train()
 
-    for step, batch in enumerate(tqdm(train_dataloader)):
+    for step, batch in enumerate(pbar := tqdm(train_dataloader)):
         model.zero_grad()
 
         output = model(batch[0].to(device), token_type_ids=None,
@@ -107,8 +114,9 @@ for epoch in range(0, epochs):
         loss += output[0].item()
         output[0].backward()
         optimizer.step()
+        pbar.set_description("Loss: {}".format(loss/(step+1)))
 
-    model.save_pretrained("./epoch_{}".format(epoch))
+    model.save_pretrained("./modified_epoch_{}".format(epoch))
 
     model.eval()
 

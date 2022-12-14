@@ -139,7 +139,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', datefm
 collect_stats = False
 
 ## wandb
+wandb = False
 if arg.wandb_project:
+    wandb = True
     wandb.init(project=arg.wandb_project, entity="improving-empathetic-nlg")
     wandb.config = vars(arg)
 

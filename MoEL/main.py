@@ -101,7 +101,9 @@ try:
             wandb_dict['bleu_valid_beam'] = bleu_score_b
 
             wandb_dict['patience'] = patient
-            wandb.log(wandb_dict)
+
+            if config.wandb:
+                wandb.log(wandb_dict)
 
             if (config.model == "experts" and n_iter<13000):
                 continue
@@ -113,7 +115,7 @@ try:
             else: 
                 patient += 1
             
-            if(patient > 3):
+            if(patient > 5):
                 print('Ran out of patience while training!')
                 break
 except KeyboardInterrupt:
@@ -124,7 +126,7 @@ except KeyboardInterrupt:
 model.load_state_dict({ name: weights_best[name] for name in weights_best })
 model.eval()
 model.epoch = 100
-loss_test, ppl_test, bce_test, acc_test, bleu_score_g, bleu_score_b= evaluate(model, data_loader_tst ,ty="valid", max_dec_step=50)
+loss_test, ppl_test, bce_test, acc_test, bleu_score_g, bleu_score_b= evaluate(model, data_loader_tst ,ty="test", max_dec_step=50)
 
 file_summary = config.save_path+"summary.txt"
 with open(file_summary, 'w') as the_file:

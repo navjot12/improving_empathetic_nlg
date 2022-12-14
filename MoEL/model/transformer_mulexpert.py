@@ -561,6 +561,8 @@ class Transformer_experts(nn.Module):
         #q_h = encoder_outputs[:,0]
         logit_prob = self.decoder_key(q_h)
         
+        persona_outputs = self.persona_encoder(persona_batch) if config.use_persona else None
+
         if(config.topk>0): 
             k_max_value, k_max_index = torch.topk(logit_prob, config.topk)
             a = np.empty([logit_prob.shape[0], self.decoder_number])
@@ -580,10 +582,10 @@ class Transformer_experts(nn.Module):
         decoded_words = []
         for i in range(max_dec_step+1):
             if(config.project):
-                out, attn_dist = self.decoder(self.embedding_proj_in(self.embedding(ys)),self.embedding_proj_in(encoder_outputs), (mask_src,mask_trg), attention_parameters)
+                out, attn_dist = self.decoder(self.embedding_proj_in(self.embedding(ys)),self.embedding_proj_in(encoder_outputs), (mask_src,mask_trg), attention_parameters, persona_output, persona_outputs)
             else:
                
-                out, attn_dist = self.decoder(self.embedding(ys),encoder_outputs, (mask_src,mask_trg), attention_parameters)
+                out, attn_dist = self.decoder(self.embedding(ys),encoder_outputs, (mask_src,mask_trg), attention_parameters, persona_outputs)
             
             logit = self.generator(out,attn_dist,enc_batch_extend_vocab, extra_zeros, attn_dist_db=None)
             #logit = F.log_softmax(logit,dim=-1) #fix the name later

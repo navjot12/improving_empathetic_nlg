@@ -150,7 +150,7 @@ class Translator(object):
 
             return active_src_seq, active_encoder_db, active_src_enc, active_inst_idx_to_position_map
 
-        def beam_decode_step(inst_dec_beams, len_dec_seq, src_seq, enc_output, inst_idx_to_position_map, n_bm, enc_batch_extend_vocab, extra_zeros, mask_src, encoder_db, mask_transformer_db, DB_ext_vocab_batch):
+        def beam_decode_step(inst_dec_beams, len_dec_seq, src_seq, enc_output, persona_output, inst_idx_to_position_map, n_bm, enc_batch_extend_vocab, extra_zeros, mask_src, encoder_db, mask_transformer_db, DB_ext_vocab_batch):
             ''' Decode and update beam status, and then return active beam idx '''
 
             def prepare_beam_dec_seq(inst_dec_beams, len_dec_seq):
@@ -178,12 +178,12 @@ class Translator(object):
                 dec_partial_pos = dec_partial_pos.unsqueeze(0).repeat(n_active_inst * n_bm, 1)
                 return dec_partial_pos
                   
-            def predict_word(dec_seq, dec_pos, src_seq, enc_output, n_active_inst, n_bm, enc_batch_extend_vocab, extra_zeros, mask_src, encoder_db, mask_transformer_db, atten):
+            def predict_word(dec_seq, dec_pos, src_seq, enc_output, persona_output, n_active_inst, n_bm, enc_batch_extend_vocab, extra_zeros, mask_src, encoder_db, mask_transformer_db, atten):
                 ## masking
                 mask_trg = dec_seq.data.eq(config.PAD_idx).unsqueeze(1)
                 mask_src = torch.cat([mask_src[0].unsqueeze(0)]*mask_trg.size(0),0)
 
-                dec_output, attn_dist = self.model.decoder(self.model.embedding(dec_seq), enc_output, (mask_src,mask_trg), atten)
+                dec_output, attn_dist = self.model.decoder(self.model.embedding(dec_seq), enc_output, (mask_src,mask_trg), atten, persona_output)
 
                 db_dist = None
 
@@ -204,7 +204,7 @@ class Translator(object):
             n_active_inst = len(inst_idx_to_position_map)
             dec_seq = prepare_beam_dec_seq(inst_dec_beams, len_dec_seq)
             dec_pos = prepare_beam_dec_pos(len_dec_seq, n_active_inst, n_bm)
-            word_prob = predict_word(dec_seq, dec_pos, src_seq, enc_output, n_active_inst, n_bm, enc_batch_extend_vocab, extra_zeros, mask_src, encoder_db, mask_transformer_db, atten = self.attention_parameters)
+            word_prob = predict_word(dec_seq, dec_pos, src_seq, enc_output, persona_output, n_active_inst, n_bm, enc_batch_extend_vocab, extra_zeros, mask_src, encoder_db, mask_transformer_db, atten = self.attention_parameters)
 
             # Update the beam with predicted word prob information and collect incomplete instances
             active_inst_idx_list = collect_active_inst_idx_list(inst_dec_beams, word_prob, inst_idx_to_position_map)
@@ -224,7 +224,7 @@ class Translator(object):
         with torch.no_grad():
             #-- Encode
             batch = src_seq
-            enc_batch, _, _, enc_batch_extend_vocab, extra_zeros, _, _ = get_input_from_batch(src_seq)
+            enc_batch, _, _, enc_batch_extend_vocab, extra_zeros, _, _, persona_batch = get_input_from_batch(src_seq)
 
             mask_src = enc_batch.data.eq(config.PAD_idx).unsqueeze(1)
             if config.dataset=="empathetic":
@@ -241,6 +241,7 @@ class Translator(object):
             #q_h = src_enc[:,0]
             logit_prob = self.model.decoder_key(q_h) 
             
+            persona_enc = self.persona_encoder(persona_batch) if config.use_persona else None
 
             if(config.topk>0): 
                 k_max_value, k_max_index = torch.topk(logit_prob, config.topk)
@@ -257,9 +258,15 @@ class Translator(object):
             #-- Repeat data for beam search
             n_bm = self.beam_size
             n_inst, len_s, d_h = src_enc.size()
+
             _, self.len_program, _, _ = self.attention_parameters.size()
             src_seq = enc_batch.repeat(1, n_bm).view(n_inst * n_bm, len_s)
             src_enc = src_enc.repeat(1, n_bm, 1).view(n_inst * n_bm, len_s, d_h)
+
+            if config.use_persona:
+                _, len_p, _ = persona_enc.size()
+                persona_enc = persona_enc.repeat(1, n_bm, 1).view(n_inst * n_bm, len_p, d_h)
+
             #-- Prepare beams
             inst_dec_beams = [Beam(n_bm, device=self.device) for _ in range(n_inst)]
 
@@ -270,7 +277,7 @@ class Translator(object):
             #-- Decode
             for len_dec_seq in range(1, max_dec_step + 1):
 
-                active_inst_idx_list = beam_decode_step(inst_dec_beams, len_dec_seq, src_seq, src_enc, inst_idx_to_position_map, n_bm, enc_batch_extend_vocab, extra_zeros, mask_src, encoder_db, mask_transformer_db, DB_ext_vocab_batch)
+                active_inst_idx_list = beam_decode_step(inst_dec_beams, len_dec_seq, src_seq, src_enc, persona_enc, inst_idx_to_position_map, n_bm, enc_batch_extend_vocab, extra_zeros, mask_src, encoder_db, mask_transformer_db, DB_ext_vocab_batch)
 
                 if not active_inst_idx_list:
                     break  # all instances have finished their path to <EOS>
@@ -303,9 +310,9 @@ def sequence_mask(sequence_length, max_len=None):
 def get_input_from_batch(batch):
     enc_batch = batch["input_batch"]
     enc_lens = batch["input_lengths"]
+    persona_batch = batch['persona_batch']
     batch_size, max_enc_len = enc_batch.size()
     assert enc_lens.size(0) == batch_size
-
     enc_padding_mask = sequence_mask(enc_lens, max_len=max_enc_len).float()
 
     extra_zeros = None
@@ -333,4 +340,4 @@ def get_input_from_batch(batch):
         if coverage is not None:
             coverage = coverage.cuda()
 
-    return enc_batch, enc_padding_mask, enc_lens, enc_batch_extend_vocab, extra_zeros, c_t_1, coverage
+    return enc_batch, enc_padding_mask, enc_lens, enc_batch_extend_vocab, extra_zeros, c_t_1, coverage, persona_batch

@@ -68,6 +68,7 @@ parser.add_argument("--ed_16", action="store_true")
 
 ## pec
 parser.add_argument("--pec_2", action="store_true")
+parser.add_argument("--pec_16", action="store_true")
 parser.add_argument("--pec_32", action="store_true")
 
 ## use personas
@@ -152,6 +153,8 @@ if arg.wandb_project:
 data_dir = 'empathetic-dialogue/'
 if arg.pec_2:
     data_dir = 'pec_2/'
+elif arg.pec_16:
+    data_dir = 'pec_16/'
 elif arg.pec_32:
     data_dir = 'pec_32/'
 elif arg.ed_16:

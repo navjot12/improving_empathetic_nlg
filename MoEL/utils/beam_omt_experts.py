@@ -241,7 +241,7 @@ class Translator(object):
             #q_h = src_enc[:,0]
             logit_prob = self.model.decoder_key(q_h) 
             
-            persona_enc = self.persona_encoder(persona_batch) if config.use_persona else None
+            persona_enc = self.model.persona_encoder(persona_batch) if config.use_persona else None
 
             if(config.topk>0): 
                 k_max_value, k_max_index = torch.topk(logit_prob, config.topk)

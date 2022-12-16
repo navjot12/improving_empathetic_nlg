@@ -111,7 +111,7 @@ try:
             else: 
                 patient += 1
             
-            if(patient > 5):
+            if(patient > 3):
                 print('Ran out of patience while training!')
                 break
 except KeyboardInterrupt:

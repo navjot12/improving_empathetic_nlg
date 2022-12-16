@@ -172,7 +172,7 @@ class DecoderLayer(nn.Module):
 
         if config.use_persona:
             # Multi-head persona-decoder attention
-            y, attention_weight = self.multi_head_attention_persona_dec(persona_outputs, x_norm, x_norm, None)
+            y, attention_weight = self.multi_head_attention_persona_dec(x_norm, persona_outputs, persona_outputs, None)
             
             # Dropout and residual after encoder-decoder attention
             x = self.dropout(x + y)

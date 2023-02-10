@@ -24,8 +24,7 @@ parser.add_argument("--batch_size", type=int, default=16)
 parser.add_argument("--lr", type=float, default=0.0001)
 parser.add_argument("--max_grad_norm", type=float, default=2.0)
 parser.add_argument("--beam_size", type=int, default=5)
-parser.add_argument("--save_path", type=str, default="save/test/")
-parser.add_argument("--save_path_dataset", type=str, default="save/")
+parser.add_argument("--save_path", type=str, default="save/")
 parser.add_argument("--cuda", action="store_true")
 
 parser.add_argument("--pointer_gen", action="store_true")
@@ -63,6 +62,17 @@ parser.add_argument("--filter", type=int, default=50)
 
 ## wandb
 parser.add_argument("--wandb_project", type=str, default=None)
+
+## ED grouped emotions
+parser.add_argument("--ed_16", action="store_true")
+
+## pec
+parser.add_argument("--pec_2", action="store_true")
+parser.add_argument("--pec_16", action="store_true")
+parser.add_argument("--pec_32", action="store_true")
+
+## use personas
+parser.add_argument("--use_persona", action="store_true")
 
 def print_opts(opts):
     """Prints the values of all command-line arguments.
@@ -112,13 +122,7 @@ epochs = 10000
 emb_file = arg.emb_file or "vectors/glove.6B.{}d.txt".format(str(emb_dim))
 pretrain_emb = arg.pretrain_emb
 
-save_path = arg.save_path
-save_path_dataset = arg.save_path_dataset
-
 test = arg.test
-if(not test):
-    save_path_dataset = save_path
-
 
 ### transformer 
 hop = arg.hop
@@ -145,3 +149,19 @@ if arg.wandb_project:
     wandb.init(project=arg.wandb_project, entity="improving-empathetic-nlg")
     wandb.config = vars(arg)
 
+## pec
+data_dir = 'empathetic-dialogue/'
+if arg.pec_2:
+    data_dir = 'pec_2/'
+elif arg.pec_16:
+    data_dir = 'pec_16/'
+elif arg.pec_32:
+    data_dir = 'pec_32/'
+elif arg.ed_16:
+    data_dir = 'ed_16/'
+
+save_path = arg.save_path + data_dir
+
+## personas
+use_persona = arg.use_persona
+persona_dim = 3072

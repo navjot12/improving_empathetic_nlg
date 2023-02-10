@@ -46,24 +46,28 @@ def clean(sentence, word_pairs):
     return sentence
 def read_langs(vocab):
     word_pairs = {"it's":"it is", "don't":"do not", "doesn't":"does not", "didn't":"did not", "you'd":"you would", "you're":"you are", "you'll":"you will", "i'm":"i am", "they're":"they are", "that's":"that is", "what's":"what is", "couldn't":"could not", "i've":"i have", "we've":"we have", "can't":"cannot", "i'd":"i would", "i'd":"i would", "aren't":"are not", "isn't":"is not", "wasn't":"was not", "weren't":"were not", "won't":"will not", "there's":"there is", "there're":"there are"}
-    train_context = np.load('empathetic-dialogue/sys_dialog_texts.train.npy',allow_pickle=True)
-    train_target = np.load('empathetic-dialogue/sys_target_texts.train.npy',allow_pickle=True)
-    train_emotion = np.load('empathetic-dialogue/sys_emotion_texts.train.npy',allow_pickle=True)
-    train_situation = np.load('empathetic-dialogue/sys_situation_texts.train.npy',allow_pickle=True)
 
-    dev_context = np.load('empathetic-dialogue/sys_dialog_texts.dev.npy',allow_pickle=True)
-    dev_target = np.load('empathetic-dialogue/sys_target_texts.dev.npy',allow_pickle=True)
-    dev_emotion = np.load('empathetic-dialogue/sys_emotion_texts.dev.npy',allow_pickle=True)
-    dev_situation = np.load('empathetic-dialogue/sys_situation_texts.dev.npy',allow_pickle=True)
+    train_context = np.load(config.data_dir + 'sys_dialog_texts.train.npy',allow_pickle=True)
+    train_target = np.load(config.data_dir + 'sys_target_texts.train.npy',allow_pickle=True)
+    train_emotion = np.load(config.data_dir + 'sys_emotion_texts.train.npy',allow_pickle=True)
+    train_situation = np.load(config.data_dir + 'sys_situation_texts.train.npy',allow_pickle=True)
+    train_persona = np.load(config.data_dir + 'sys_persona_embedding.train.npy',allow_pickle=True) if config.use_persona or os.path.exists(config.data_dir + 'sys_persona_embedding.train.npy') else np.zeros((len(train_target), config.persona_dim))
+
+    dev_context = np.load(config.data_dir + 'sys_dialog_texts.dev.npy',allow_pickle=True)
+    dev_target = np.load(config.data_dir + 'sys_target_texts.dev.npy',allow_pickle=True)
+    dev_emotion = np.load(config.data_dir + 'sys_emotion_texts.dev.npy',allow_pickle=True)
+    dev_situation = np.load(config.data_dir + 'sys_situation_texts.dev.npy',allow_pickle=True)
+    dev_persona = np.load(config.data_dir + 'sys_persona_embedding.dev.npy',allow_pickle=True) if config.use_persona or os.path.exists(config.data_dir + 'sys_persona_embedding.dev.npy') else np.zeros((len(dev_target), config.persona_dim))
     
-    test_context = np.load('empathetic-dialogue/sys_dialog_texts.test.npy',allow_pickle=True)
-    test_target = np.load('empathetic-dialogue/sys_target_texts.test.npy',allow_pickle=True)
-    test_emotion = np.load('empathetic-dialogue/sys_emotion_texts.test.npy',allow_pickle=True)
-    test_situation = np.load('empathetic-dialogue/sys_situation_texts.test.npy',allow_pickle=True)
+    test_context = np.load(config.data_dir + 'sys_dialog_texts.test.npy',allow_pickle=True)
+    test_target = np.load(config.data_dir + 'sys_target_texts.test.npy',allow_pickle=True)
+    test_emotion = np.load(config.data_dir + 'sys_emotion_texts.test.npy',allow_pickle=True)
+    test_situation = np.load(config.data_dir + 'sys_situation_texts.test.npy',allow_pickle=True)
+    test_persona = np.load(config.data_dir + 'sys_persona_embedding.test.npy',allow_pickle=True) if config.use_persona or os.path.exists(config.data_dir + 'sys_persona_embedding.test.npy') else np.zeros((len(test_target), config.persona_dim))
 
-    data_train = {'context':[],'target':[],'emotion':[], 'situation':[]}
-    data_dev = {'context':[],'target':[],'emotion':[], 'situation':[]}
-    data_test = {'context':[],'target':[],'emotion':[], 'situation':[]}
+    data_train = {'context':[],'target':[],'emotion':[], 'situation':[], 'persona':[]}
+    data_dev = {'context':[],'target':[],'emotion':[], 'situation':[], 'persona':[]}
+    data_test = {'context':[],'target':[],'emotion':[], 'situation':[], 'persona':[]}
 
     for context in train_context:
         u_list = []
@@ -82,7 +86,9 @@ def read_langs(vocab):
         vocab.index_words(situation)
     for emotion in train_emotion:
         data_train['emotion'].append(emotion)
-    assert len(data_train['context']) == len(data_train['target']) == len(data_train['emotion']) == len(data_train['situation'])
+    for persona in train_persona:
+        data_train['persona'].append(persona.astype(np.double))
+    assert len(data_train['context']) == len(data_train['target']) == len(data_train['emotion']) == len(data_train['situation']) == len(data_train['persona'])
 
     for context in dev_context:
         u_list = []
@@ -101,7 +107,9 @@ def read_langs(vocab):
         vocab.index_words(situation)
     for emotion in dev_emotion:
         data_dev['emotion'].append(emotion)
-    assert len(data_dev['context']) == len(data_dev['target']) == len(data_dev['emotion']) == len(data_dev['situation'])
+    for persona in dev_persona:
+        data_dev['persona'].append(persona.astype(np.double))
+    assert len(data_dev['context']) == len(data_dev['target']) == len(data_dev['emotion']) == len(data_dev['situation']) == len(data_dev['persona'])
 
     for context in test_context:
         u_list = []
@@ -120,26 +128,34 @@ def read_langs(vocab):
         vocab.index_words(situation)
     for emotion in test_emotion:
         data_test['emotion'].append(emotion)
-    assert len(data_test['context']) == len(data_test['target']) == len(data_test['emotion']) == len(data_test['situation'])
+    for persona in test_persona:
+        data_test['persona'].append(persona.astype(np.double))
+    assert len(data_test['context']) == len(data_test['target']) == len(data_test['emotion']) == len(data_test['situation']) == len(data_test['persona'])
     return data_train, data_dev, data_test, vocab
 
 
 def load_dataset():
-    if(os.path.exists('empathetic-dialogue/dataset_preproc.p')):
-        print("LOADING empathetic_dialogue")
-        with open('empathetic-dialogue/dataset_preproc.p', "rb") as f:
+    if(os.path.exists(config.data_dir + 'dataset_preproc.p')):
+        print("LOADING " + config.data_dir)
+        with open(config.data_dir + 'dataset_preproc.p', "rb") as f:
             [data_tra, data_val, data_tst, vocab] = pickle.load(f)
     else:
         print("Building dataset...")
         data_tra, data_val, data_tst, vocab  = read_langs(vocab=Lang({config.UNK_idx: "UNK", config.PAD_idx: "PAD", config.EOS_idx: "EOS", config.SOS_idx: "SOS", config.USR_idx:"USR", config.SYS_idx:"SYS", config.CLS_idx:"CLS"})) 
-        with open('empathetic-dialogue/dataset_preproc.p', "wb") as f:
+        with open(config.data_dir + 'dataset_preproc.p', "wb") as f:
             pickle.dump([data_tra, data_val, data_tst, vocab], f)
             print("Saved PICKLE")
     for i in range(3):
         print('[situation]:', ' '.join(data_tra['situation'][i]))
         print('[emotion]:', data_tra['emotion'][i])
         print('[context]:', [' '.join(u) for u in data_tra['context'][i]])
+        print('[persona]:', data_tra['persona'][i][:10])
         print('[target]:', ' '.join(data_tra['target'][i]))
         print(" ")
+
+    print('Unique emotions and counts in Training data:',)
+    emotions, counts = np.unique(data_tra['emotion'], return_counts=True)
+    print([emo_counts for emo_counts in zip(emotions, counts)])
+
     return data_tra, data_val, data_tst, vocab
 

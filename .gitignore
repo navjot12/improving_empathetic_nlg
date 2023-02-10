@@ -1,8 +1,9 @@
 /MoEL/vectors/
-/MoEL/save/
 /MoEL/wandb/
 
-/MoEL/empathetic-dialogue/*.p
+/MoEL/*/*.p
+/MoEL/pec_2/*persona_embedding*
+/MoEL/pec_2/sys_target_texts.train.npy
 
 /pec/pec*
 

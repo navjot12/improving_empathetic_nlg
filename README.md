@@ -1,43 +1,33 @@
-# Work done so far:
+# Improving Empathetic NLG
 
-### [MoEL](https://github.com/navjot12/improving_empathetic_nlg/tree/main/MoEL)
-1. Cloned [MoEL](https://github.com/HLTCHKUST/MoEL) and attempted retraining the model. Raised [Issue#12](https://github.com/navjot12/improving_empathetic_nlg/issues/12).
-1. Integrated wandb for logging. See [dashboard](https://wandb.ai/improving-empathetic-nlg/moel) for history of runs and logs.
-1. Modifications made to MoEL:
-	<ol> 
-		<li> Decreased check_iter to 1500 from 2000 to increase frequency of logging. </li>
-		<li> Increased patience to 3 from 2. Patience is increased every time validation data evaluation does not show improvement in performance (which is done after every check_iter number of iterations). This change makes the model train for another check_iter number of training batches before deciding that the model is overfitting (and stop training). Experiments have shown that the model keeps overfitting if patience is allowed to increases to 20. </li>
-		<li> Started reporting actual calculated perplexity instead of exponential loss. </li>
-		<li> Bug fix: Validation accuracy over-wrote train accuracy every time validation data was evaluated. </li>
-	</ol>
-1. To see if MoEL does better if number of distinct emotions are reduced, 32 emotions were grouped into 16 according to the categorization [here](https://docs.google.com/spreadsheets/d/1lBUdjVdTJ17kOqA6RRwNHglp0MKJumMNQEkeP_Xu720/edit?usp=sharing). This is available in the [16_emotions](https://github.com/navjot12/improving_empathetic_nlg/tree/16_emotions) branch.</li>
+This work has been done as part of a project for the COMS 6998: Conversational AI course by Prof. Zhou Yu at Columbia University in Fall 2022 semester.
 
-### [PEC](https://github.com/navjot12/improving_empathetic_nlg/tree/main/pec)
-1. [PEC](https://huggingface.co/datasets/pec) contains 281,163 instances in total which was filtered according to following criterion (applied in order):
-	<ol>
-		<li> Context only has 1 speaker. </li>
-		<li> The context sentences have at least 20 words in total. </li>
-		<li> Response speakers' personas have at least 25 sentences. </li>
-		<li> Response utterance has at least 10 words. </li>
-	</ol>
-	</li>
-1. [Longformer](https://huggingface.co/docs/transformers/model_doc/longformer) was used to derive persona embeddings for persona sentences after filtering PEC.
-	<ol>
-		<li> Persona embedding is a 3,072 dimension vector, calculated by averaging the concatenation of last 4 layers of longformer, across all word in a persona. </li>
-		<li> Local attention was configured for every persona sentence, while global attention was configured across separator tokens </li>
-	</ol>
-1. PEC was transformed from to the format required by MoEL: parallel vectors.
+# Abstract
 
+Empathetic response generation is a crucial aspect of many chatbot conversations and tasks. Previous research has shown promising results in this area by leveraging various annotated datasets and approaches, leading to a wide range of literature and tools that work towards building empathetic conversational agents. We propose a modified version of the [MoEL model](https://github.com/HLTCHKUST/MoEL) ([Lin et al., 2019](https://arxiv.org/pdf/1908.07687.pdf)) that takes into account not only emotion but also the speaker’s persona in order to capture the nuances of how different personalities express empathy. We attempt to incorporate methods from different empathetic dialogue paradigms into one model and aim to achieve richer results. Specifically, we adapt our model to work with the [PEC dataset](https://github.com/zhongpeixiang/PEC) ([Zhong et al., 2020](https://arxiv.org/abs/2004.12316)) while leveraging rich persona information about speakers. We also explore the potential of adding additional auxiliary signals to improve empathetic natural language generation through experimentation with meaningful variations of MoEL. Read further [here](Conversational_AI_Final_Report.pdf).
 
-### [Emotion Classifier](https://github.com/navjot12/improving_empathetic_nlg/tree/main/ed_classifier)
-1. MoEL requires emotion annotation along with context. To augment PEC with it, a BERT-based emotion classifier was built.
+# Explanation of MoEL's Architecture
 
-# Command to launch MoEL training:
+![MoEL Architecture](annotated_moel.jpg)
+
+# Our Methodology
+
+This project consists of four major components:
+1. Processing the PEC dataset to create embeddings from persona sentences. In order to capture entire persona, [Longformer](https://arxiv.org/abs/2004.05150) was used to create 3,072-dimensional **persona embeddings**.
+1. Training of a BERT-based **emotion classifier** on the Empathetic Dialogue dataset ([Rashkin et al., 2018](https://arxiv.org/abs/1811.00207)), and using it to annotate the context utterances in PEC with emotion labels required for MoEL.
+1. **Understanding MoEL**. MoEL is trained on Empathetic Dialogue dataset which consists of 32 distinct emotions, we decided to group similar emotions together in order to simplify the complexity of the task, and work with 16 emotion-groups instead.
+1. Modifying MoEL's architecture to condition the emotional response generation on persona. This was done by extending the transformer architecture in MoEL to have a layer of **cross-attention between emotional NLG text and persona-embedding**. Specifically, an additional decoder block was added on top of each of MoEL's individual decoders. The new decoder block queried existing decoder's generated text using a self-attentive persona encoder block's output as key and value. The same has been illustrated in the image below:
+
+![Modified MoEL Architecture](architecture.jpg)
+
+While this work requires extensive human evaluations to make strong claims, initial indicators suggest that this method increases the expression of sentiment in MoEL's generated text.
+
+## Command to launch MoEL training:
 
 `python3 main.py --model experts  --label_smoothing --noam --emb_dim 300 --hidden_dim 300 --hop 1 --heads 2 --topk 5 --cuda --pretrain_emb --softmax --basic_learner --schedule 10000`
 
 Optional arguments:
-1. `--wandb_project moel` : To log the training run's parameters on [wandb](https://wandb.ai/improving-empathetic-nlg/moel).
+1. `--wandb_project moel` : To log the training run's parameters on wandb.
 1. `--ed_16` : To train MoEL on the empathetic-dialogue dataset with 16 emotions. This needs the numpy arrays required by MoEL to be present in ed_16 folder.
 1. `--pec_2` : To train MoEL on pec dataset with 2 emotions. This needs the numpy arrays required by MoEL to be present in pec_2 folder.
 1. `--pec_32` : To train MoEL on pec dataset with 32 emotions. This needs the numpy arrays required by MoEL to be present in pec_32 folder.
